@@ -1,0 +1,3658 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#00f5ff" id="themeColorMeta">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="WAMS">
+  <meta name="description" content="WhatsApp Media Share - Comparte miniaturas de YouTube en estados de WhatsApp">
+  <title>WAMS - WhatsApp Media Share</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icon.png">
+  <link rel="icon" type="image/png" href="icon.png">
+  <!-- Share Target API -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --accent: #00f5ff;
+      --accent2: #ff006e;
+      --bg: #0a0a0f;
+      --bg2: #0d1117;
+      --bg3: #111827;
+      --surface: #141a26;
+      --surface2: #1c2333;
+      --text: #e2f0ff;
+      --text2: #8892a4;
+      --border: rgba(0,245,255,0.25);
+      --glow: 0 0 20px rgba(0,245,255,0.4), 0 0 40px rgba(0,245,255,0.15);
+      --glow2: 0 0 20px rgba(255,0,110,0.4);
+      --btn-radius: 8px;
+      --btn-shape: 8px;
+      --btn-color: var(--accent);
+      --font-main: 'Rajdhani', sans-serif;
+      --font-display: 'Orbitron', monospace;
+      --sound-enabled: 1;
+    }
+
+    .theme-matrix {
+      --accent: #00ff41;
+      --accent2: #003b00;
+      --bg: #000800;
+      --bg2: #001200;
+      --bg3: #001a00;
+      --surface: #002200;
+      --surface2: #003300;
+      --text: #00ff41;
+      --text2: #007a1a;
+      --border: rgba(0,255,65,0.3);
+      --glow: 0 0 20px rgba(0,255,65,0.5), 0 0 40px rgba(0,255,65,0.2);
+      --glow2: 0 0 20px rgba(0,180,40,0.4);
+    }
+
+    .theme-gold {
+      --accent: #ffd700;
+      --accent2: #ff8c00;
+      --bg: #0a0800;
+      --bg2: #100e00;
+      --bg3: #1a1500;
+      --surface: #1f1a00;
+      --surface2: #2a2200;
+      --text: #fff3aa;
+      --text2: #8a7a30;
+      --border: rgba(255,215,0,0.3);
+      --glow: 0 0 20px rgba(255,215,0,0.5), 0 0 40px rgba(255,180,0,0.2);
+      --glow2: 0 0 20px rgba(255,140,0,0.4);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--font-main);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Animated background grid */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(0,245,255,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,245,255,0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+      animation: gridMove 20s linear infinite;
+    }
+
+    .theme-matrix body::before { background-image: linear-gradient(rgba(0,255,65,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(0,255,65,0.04) 1px, transparent 1px); }
+    .theme-gold body::before { background-image: linear-gradient(rgba(255,215,0,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,215,0,0.03) 1px, transparent 1px); }
+
+    @keyframes gridMove {
+      0% { transform: translateY(0); }
+      100% { transform: translateY(40px); }
+    }
+
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    /* ============ HEADER ============ */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(10,10,15,0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    /* ============ LOGO ============ */
+    .logo-wrap {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      position: relative;
+    }
+
+    .logo-svg {
+      width: 44px;
+      height: 44px;
+      position: relative;
+    }
+
+    .logo-svg svg {
+      width: 100%;
+      height: 100%;
+      filter: drop-shadow(0 0 6px var(--accent));
+      transition: transform 0.3s ease;
+    }
+
+    .logo-wrap:hover .logo-svg svg {
+      transform: rotate(15deg) scale(1.15);
+      filter: drop-shadow(0 0 14px var(--accent)) drop-shadow(0 0 28px var(--accent));
+    }
+
+    .logo-ring {
+      animation: spinRing 8s linear infinite;
+      transform-origin: center;
+    }
+
+    @keyframes spinRing {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    .logo-text {
+      font-family: var(--font-display);
+      font-size: 1.2rem;
+      font-weight: 900;
+      letter-spacing: 3px;
+      background: linear-gradient(90deg, var(--accent), var(--accent2), var(--accent));
+      background-size: 200% auto;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      animation: shimmer 3s linear infinite;
+    }
+
+    @keyframes shimmer {
+      0% { background-position: -200% center; }
+      100% { background-position: 200% center; }
+    }
+
+    .logo-sub {
+      font-size: 0.55rem;
+      color: var(--text2);
+      letter-spacing: 2px;
+      font-family: var(--font-display);
+      display: block;
+      margin-top: -2px;
+    }
+
+    /* ============ NAV ICONS ============ */
+    .nav-icons {
+      display: flex;
+      gap: 8px;
+    }
+
+    .nav-btn {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--text2);
+      width: 38px;
+      height: 38px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .nav-btn:hover, .nav-btn.active {
+      border-color: var(--accent);
+      color: var(--accent);
+      box-shadow: var(--glow);
+      background: rgba(0,245,255,0.05);
+    }
+
+    .nav-btn::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at center, var(--accent) 0%, transparent 70%);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .nav-btn:active::after { opacity: 0.2; }
+
+    /* ============ MAIN LAYOUT ============ */
+    main {
+      position: relative;
+      z-index: 1;
+      padding: 16px;
+      max-width: 680px;
+      margin: 0 auto;
+      padding-bottom: 80px;
+    }
+
+    /* ============ PANELS ============ */
+    .panel {
+      display: none;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .panel.active { display: block; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ============ CARDS ============ */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 16px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--accent), transparent);
+      opacity: 0.6;
+    }
+
+    /* ============ INPUT URL ============ */
+    .url-input-wrap {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .url-input {
+      flex: 1;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 14px;
+      color: var(--text);
+      font-family: var(--font-main);
+      font-size: 0.95rem;
+      outline: none;
+      transition: all 0.2s;
+    }
+
+    .url-input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px rgba(0,245,255,0.1);
+    }
+
+    .url-input::placeholder { color: var(--text2); }
+
+    textarea.url-input {
+      resize: vertical;
+      min-height: 70px;
+      line-height: 1.5;
+    }
+
+    /* ============ EDITOR ============ */
+    .editor-tab {
+      flex: 1;
+      background: none;
+      border: none;
+      color: var(--text2);
+      padding: 10px;
+      font-family: var(--font-main);
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s;
+      letter-spacing: 0.5px;
+    }
+    .editor-tab.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+      background: rgba(0,245,255,0.04);
+    }
+    .style-preset {
+      padding: 6px 10px;
+      border: 1px solid var(--border);
+      background: var(--surface2);
+      color: var(--text);
+      border-radius: 6px;
+      font-size: 0.78rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: var(--font-main);
+    }
+    .style-preset:hover, .style-preset.active {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    .editor-layer {
+      position: absolute;
+      cursor: move;
+      user-select: none;
+      touch-action: none;
+      transform-origin: center center;
+      line-height: 1.1;
+      white-space: pre;
+      padding: 2px 4px;
+    }
+    .editor-layer.selected {
+      outline: 2px dashed var(--accent);
+      outline-offset: 3px;
+    }
+    .sticker-btn {
+      font-size: 2rem;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      cursor: pointer;
+      padding: 6px;
+      text-align: center;
+      transition: all 0.15s;
+      line-height: 1;
+    }
+    .sticker-btn:hover {
+      border-color: var(--accent);
+      transform: scale(1.15);
+      background: rgba(0,245,255,0.06);
+    }
+
+    .lang-btn.active {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: rgba(0,245,255,0.08);
+    }
+
+    /* ============ CROP TOOL ============ */
+    .crop-handle {
+      position: absolute;
+      width: 18px;
+      height: 18px;
+      background: var(--accent);
+      border: 2px solid #000;
+      border-radius: 3px;
+      pointer-events: auto;
+      touch-action: none;
+      z-index: 10;
+      transform: translate(-50%, -50%);
+    }
+    #ch-tl { top:0; left:0; }
+    #ch-tc { top:0; left:50%; }
+    #ch-tr { top:0; right:0; transform:translate(50%,-50%); }
+    #ch-ml { top:50%; left:0; }
+    #ch-mr { top:50%; right:0; transform:translate(50%,-50%); }
+    #ch-bl { bottom:0; left:0; transform:translate(-50%,50%); }
+    #ch-bc { bottom:0; left:50%; transform:translate(-50%,50%); }
+    #ch-br { bottom:0; right:0; transform:translate(50%,50%); }
+
+    /* ============ BUTTONS ============ */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 10px 18px;
+      border: 1px solid var(--btn-color);
+      background: transparent;
+      color: var(--btn-color);
+      border-radius: var(--btn-shape);
+      font-family: var(--font-main);
+      font-size: 0.9rem;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+      overflow: hidden;
+      white-space: nowrap;
+    }
+
+    .btn:hover {
+      background: rgba(0,245,255,0.08);
+      box-shadow: var(--glow);
+      transform: translateY(-1px);
+    }
+
+    .btn:active {
+      transform: scale(0.97);
+      box-shadow: 0 0 30px var(--accent), inset 0 0 15px rgba(0,245,255,0.1);
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: var(--bg);
+      border-color: var(--accent);
+      font-weight: 700;
+    }
+
+    .btn-primary:hover {
+      filter: brightness(1.15);
+      box-shadow: var(--glow);
+      background: var(--accent);
+      color: var(--bg);
+    }
+
+    .btn-sm {
+      padding: 7px 12px;
+      font-size: 0.82rem;
+    }
+
+    .btn-full { width: 100%; }
+
+    .btn svg { width: 16px; height: 16px; flex-shrink: 0; }
+
+    /* Halo effect on click */
+    .btn-halo {
+      position: absolute;
+      width: 100px; height: 100px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(0,245,255,0.4) 0%, transparent 70%);
+      transform: translate(-50%, -50%) scale(0);
+      animation: haloExpand 0.5s ease-out forwards;
+      pointer-events: none;
+    }
+
+    @keyframes haloExpand {
+      to { transform: translate(-50%, -50%) scale(3); opacity: 0; }
+    }
+
+    /* ============ RESULT AREA ============ */
+    .result-area {
+      display: none;
+    }
+
+    .result-area.visible {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      align-items: stretch;
+    }
+
+    .thumb-wrap {
+      position: relative;
+      flex: 1;
+      min-width: 200px;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+
+    .thumb-wrap img {
+      width: 100%;
+      display: block;
+    }
+
+    .thumb-play {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0,0,0,0.3);
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .thumb-wrap:hover .thumb-play { opacity: 1; }
+
+    .play-icon {
+      width: 50px; height: 50px;
+      background: rgba(255,255,255,0.9);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .result-actions {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      width: 100%;
+    }
+
+    .result-actions .btn {
+      width: 100%;
+      justify-content: center;
+      font-size: 0.78rem;
+      padding: 10px 6px;
+    }
+
+    .result-actions .btn-full-row {
+      grid-column: 1 / -1;
+    }
+
+    /* ============ LIBRARY ============ */
+    .lib-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 12px;
+    }
+
+    .lib-item {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+    }
+
+    .lib-item:hover {
+      border-color: var(--accent);
+      box-shadow: var(--glow);
+      transform: translateY(-2px);
+    }
+
+    .lib-item img { width: 100%; aspect-ratio: 16/9; object-fit: cover; display: block; }
+
+    .lib-item-info {
+      padding: 8px;
+    }
+
+    .lib-item-title {
+      font-size: 0.78rem;
+      color: var(--text2);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .lib-item-cat {
+      font-size: 0.68rem;
+      color: var(--accent);
+      margin-top: 2px;
+    }
+
+    .lib-item-del {
+      position: absolute;
+      top: 4px; right: 4px;
+      background: rgba(255,0,80,0.8);
+      border: none;
+      color: white;
+      width: 22px; height: 22px;
+      border-radius: 50%;
+      font-size: 0.7rem;
+      cursor: pointer;
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .lib-item:hover .lib-item-del { display: flex; }
+
+    /* ============ CATEGORIES ============ */
+    .cat-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .cat-chip {
+      padding: 5px 14px;
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      font-size: 0.82rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: var(--surface2);
+    }
+
+    .cat-chip:hover, .cat-chip.active {
+      border-color: var(--accent);
+      color: var(--accent);
+      box-shadow: 0 0 8px rgba(0,245,255,0.3);
+    }
+
+    /* ============ SETTINGS ============ */
+    .settings-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+
+    .settings-row:last-child { border-bottom: none; }
+
+    .settings-label {
+      font-size: 0.95rem;
+      color: var(--text);
+    }
+
+    .settings-desc {
+      font-size: 0.75rem;
+      color: var(--text2);
+      margin-top: 2px;
+    }
+
+    /* Toggle switch */
+    .toggle {
+      position: relative;
+      width: 46px;
+      height: 26px;
+      flex-shrink: 0;
+    }
+
+    .toggle input { opacity: 0; width: 0; height: 0; }
+
+    .toggle-slider {
+      position: absolute;
+      inset: 0;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 26px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    .toggle-slider::before {
+      content: '';
+      position: absolute;
+      width: 18px; height: 18px;
+      left: 3px; top: 3px;
+      background: var(--text2);
+      border-radius: 50%;
+      transition: 0.3s;
+    }
+
+    .toggle input:checked + .toggle-slider {
+      background: rgba(0,245,255,0.15);
+      border-color: var(--accent);
+    }
+
+    .toggle input:checked + .toggle-slider::before {
+      background: var(--accent);
+      transform: translateX(20px);
+      box-shadow: 0 0 6px var(--accent);
+    }
+
+    /* ============ THEME SELECTOR ============ */
+    .theme-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+
+    .theme-card {
+      border: 2px solid transparent;
+      border-radius: 10px;
+      padding: 12px;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.2s;
+      font-size: 0.8rem;
+      font-family: var(--font-display);
+      letter-spacing: 1px;
+    }
+
+    .theme-card:hover { transform: scale(1.03); }
+    .theme-card.selected { border-color: var(--accent); box-shadow: var(--glow); }
+
+    .theme-tron { background: linear-gradient(135deg, #0a0a1a, #001a2e); color: #00f5ff; }
+    .theme-matrix { background: linear-gradient(135deg, #000800, #001a00); color: #00ff41; }
+    .theme-gold { background: linear-gradient(135deg, #0a0800, #1a1500); color: #ffd700; }
+
+    .theme-dot {
+      width: 24px; height: 24px;
+      border-radius: 50%;
+      margin: 0 auto 6px;
+    }
+
+    /* ============ SELECT / RANGE ============ */
+    .styled-select {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      padding: 6px 10px;
+      font-family: var(--font-main);
+      font-size: 0.85rem;
+      outline: none;
+    }
+
+    .styled-range {
+      -webkit-appearance: none;
+      width: 100%;
+      height: 4px;
+      background: var(--surface2);
+      border-radius: 4px;
+      outline: none;
+    }
+
+    .styled-range::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 16px; height: 16px;
+      background: var(--accent);
+      border-radius: 50%;
+      box-shadow: 0 0 6px var(--accent);
+      cursor: pointer;
+    }
+
+    /* ============ SECTION TITLES ============ */
+    .section-title {
+      font-family: var(--font-display);
+      font-size: 0.75rem;
+      letter-spacing: 3px;
+      color: var(--accent);
+      text-transform: uppercase;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .section-title::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(90deg, var(--accent), transparent);
+    }
+
+    /* ============ SHAPE SELECTOR ============ */
+    .shape-grid {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .shape-opt {
+      width: 44px; height: 32px;
+      border: 1px solid var(--border);
+      background: var(--surface2);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.7rem;
+      color: var(--text2);
+      transition: all 0.2s;
+    }
+
+    .shape-opt:hover, .shape-opt.active {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .shape-opt[data-r="0"] { border-radius: 0; }
+    .shape-opt[data-r="6"] { border-radius: 6px; }
+    .shape-opt[data-r="12"] { border-radius: 12px; }
+    .shape-opt[data-r="99"] { border-radius: 99px; }
+
+    /* ============ COLOR PICKER ============ */
+    .color-grid {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .color-dot {
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      cursor: pointer;
+      border: 2px solid transparent;
+      transition: all 0.2s;
+    }
+
+    .color-dot:hover, .color-dot.active {
+      border-color: white;
+      box-shadow: 0 0 8px currentColor;
+      transform: scale(1.15);
+    }
+
+    /* ============ BOTTOM NAV ============ */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      z-index: 100;
+      background: rgba(10,10,15,0.92);
+      backdrop-filter: blur(12px);
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-around;
+      padding: 8px 0;
+      padding-bottom: max(8px, env(safe-area-inset-bottom));
+    }
+
+    .bnav-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      background: none;
+      border: none;
+      color: var(--text2);
+      cursor: pointer;
+      padding: 6px 14px;
+      border-radius: 8px;
+      transition: all 0.2s;
+      font-family: var(--font-main);
+      font-size: 0.65rem;
+      letter-spacing: 1px;
+    }
+
+    .bnav-btn svg { width: 20px; height: 20px; }
+
+    .bnav-btn:hover, .bnav-btn.active {
+      color: var(--accent);
+    }
+
+    .bnav-btn.active {
+      background: rgba(0,245,255,0.06);
+      box-shadow: 0 0 12px rgba(0,245,255,0.15);
+    }
+
+    /* ============ INSTALL BANNER ============ */
+    #installBanner {
+      display: none;
+      background: linear-gradient(135deg, var(--surface), var(--surface2));
+      border: 1px solid var(--accent);
+      border-radius: 10px;
+      padding: 14px;
+      margin-bottom: 16px;
+      align-items: center;
+      gap: 12px;
+      box-shadow: var(--glow);
+    }
+
+    #installBanner.show { display: flex; }
+
+    /* ============ CREDITS ============ */
+    .credits {
+      text-align: center;
+      padding: 24px 16px;
+      border-top: 1px solid var(--border);
+      margin-top: 20px;
+    }
+
+    .credits p {
+      font-size: 0.78rem;
+      color: var(--text2);
+      line-height: 1.8;
+    }
+
+    .credits a {
+      color: var(--accent);
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.2s;
+    }
+
+    .credits a:hover {
+      text-shadow: 0 0 8px var(--accent);
+    }
+
+    /* ============ MODAL ============ */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.7);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+
+    .modal-overlay.open { display: flex; }
+
+    .modal {
+      background: var(--surface);
+      border: 1px solid var(--accent);
+      border-radius: 14px;
+      padding: 24px;
+      width: 100%;
+      max-width: 400px;
+      box-shadow: var(--glow);
+      animation: modalIn 0.3s ease;
+    }
+
+    @keyframes modalIn {
+      from { transform: scale(0.9); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+
+    .modal-title {
+      font-family: var(--font-display);
+      font-size: 0.9rem;
+      letter-spacing: 2px;
+      color: var(--accent);
+      margin-bottom: 16px;
+    }
+
+    /* ============ INPUT text ============ */
+    .text-input {
+      width: 100%;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 10px 12px;
+      color: var(--text);
+      font-family: var(--font-main);
+      font-size: 0.9rem;
+      outline: none;
+      margin-bottom: 10px;
+    }
+
+    .text-input:focus { border-color: var(--accent); }
+
+    /* ============ TOAST ============ */
+    .toast-container {
+      position: fixed;
+      bottom: 80px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 300;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .toast {
+      background: var(--surface);
+      border: 1px solid var(--accent);
+      border-radius: 20px;
+      padding: 8px 20px;
+      font-size: 0.85rem;
+      color: var(--accent);
+      animation: toastIn 0.3s ease, toastOut 0.3s ease 2.2s forwards;
+      box-shadow: var(--glow);
+    }
+
+    @keyframes toastIn {
+      from { transform: translateY(20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    @keyframes toastOut {
+      to { transform: translateY(-10px); opacity: 0; }
+    }
+
+    /* ============ EMPTY STATE ============ */
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--text2);
+    }
+
+    .empty-icon {
+      font-size: 3rem;
+      margin-bottom: 12px;
+      filter: grayscale(1);
+    }
+
+    /* ============ SEARCH AREA ============ */
+    .search-bar {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    /* ============ RESPONSIVE ============ */
+    @media (max-width: 480px) {
+      .result-area.visible { flex-direction: column; }
+      .result-actions { flex-direction: row; flex-wrap: wrap; width: 100%; }
+      .result-actions .btn { flex: 1; }
+    }
+
+    /* ============ BORDER GLOW ANIMATION ============ */
+    .card-glow {
+      border-color: var(--accent);
+      animation: borderPulse 3s ease-in-out infinite;
+    }
+
+    @keyframes borderPulse {
+      0%, 100% { box-shadow: 0 0 4px var(--accent), inset 0 0 4px rgba(0,245,255,0.05); }
+      50% { box-shadow: 0 0 16px var(--accent), 0 0 30px rgba(0,245,255,0.2), inset 0 0 8px rgba(0,245,255,0.05); }
+    }
+
+    /* === MATRIX RAIN (disabled by default, toggle in settings) === */
+    #matrixCanvas {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      opacity: 0.06;
+      pointer-events: none;
+    }
+
+    .matrix-bg #matrixCanvas { display: block; }
+
+    /* VOLUME ICON */
+    .vol-icon { transition: color 0.2s; }
+    .vol-muted { color: var(--text2) !important; }
+  </style>
+</head>
+<body class="theme-tron" id="appBody">
+
+<canvas id="matrixCanvas"></canvas>
+
+<!-- HEADER -->
+<header>
+  <div class="logo-wrap" onclick="playSound('click'); showPanel('home')">
+    <div class="logo-svg">
+      <svg viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <!-- Outer ring animated -->
+        <circle class="logo-ring" cx="22" cy="22" r="20" stroke="var(--accent)" stroke-width="0.5" stroke-dasharray="4 4"/>
+        <!-- Play button shape -->
+        <circle cx="22" cy="22" r="14" fill="var(--accent)" fill-opacity="0.12" stroke="var(--accent)" stroke-width="1"/>
+        <polygon points="17,15 33,22 17,29" fill="var(--accent)"/>
+        <!-- WA icon hint -->
+        <circle cx="32" cy="12" r="6" fill="#25D366"/>
+        <text x="32" y="16" text-anchor="middle" font-size="7" fill="white" font-weight="bold">W</text>
+      </svg>
+    </div>
+    <div>
+      <div class="logo-text">WAMS</div>
+      <span class="logo-sub">MEDIA SHARE</span>
+    </div>
+  </div>
+  <div class="nav-icons">
+    <button class="nav-btn vol-icon" id="volBtn" title="Sonido" onclick="toggleSound()">🔊</button>
+    <button class="nav-btn" id="installBtn" style="display:none" title="Instalar" onclick="installApp()">📲</button>
+    <button class="nav-btn" title="Ajustes" onclick="playSound('click');showPanel('settings')">⚙️</button>
+  </div>
+</header>
+
+<!-- INSTALL BANNER -->
+<div id="installBanner">
+  <div style="flex:1">
+    <div style="font-weight:600;font-size:0.9rem">Instalar WAMS</div>
+    <div style="font-size:0.75rem;color:var(--text2)">Disponible para instalar en tu dispositivo</div>
+  </div>
+  <button class="btn btn-sm btn-primary" onclick="installApp()">Instalar</button>
+  <button class="btn btn-sm" style="border:none;color:var(--text2)" onclick="document.getElementById('installBanner').classList.remove('show')">✕</button>
+</div>
+
+<!-- MAIN -->
+<main>
+
+  <!-- ======== HOME PANEL ======== -->
+  <div class="panel active" id="panel-home">
+
+    <div class="card card-glow">
+      <div class="section-title" data-i18n="home_title">Obtener miniatura</div>
+      <div class="url-input-wrap">
+        <input class="url-input" id="urlInput" type="url" placeholder="YouTube, Vimeo, TikTok, Reddit, Pinterest, Twitch…" data-i18n-placeholder="url_placeholder" autocomplete="off">
+        <button class="btn btn-primary" onclick="fetchThumbnail()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        </button>
+      </div>
+      <button class="btn btn-full" style="margin-bottom:8px;--btn-color:#25D366" onclick="pasteFromClipboard()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="2" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        <span data-i18n="btn_paste">Pegar desde portapapeles</span>
+      </button>
+      <button class="btn btn-full" style="margin-bottom:8px;--btn-color:#a259ff" onclick="generateAIImage()" id="btnAIGenerate">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+        <span data-i18n="btn_ai_generate">✨ Generar miniatura con IA</span>
+      </button>
+      <button class="btn btn-full" style="--btn-color:#ff6b35" onclick="openPromptAI()" id="btnPromptAI">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+        <span data-i18n="btn_prompt_ai">🖊️ Generar desde mi prompt</span>
+      </button>
+      <button class="btn btn-full" style="margin-top:8px;--btn-color:#00d4aa" onclick="fetchOriginalAI()" id="btnOriginalAI">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21-4.35-4.35"/><path d="M11 8v6M8 11h6"/></svg>
+        <span data-i18n="btn_original_ai">🔍 Obtener imagen original con IA</span>
+      </button>
+      <button class="btn btn-full" style="margin-top:8px;--btn-color:#7c4dff" onclick="document.getElementById('filePickerInput').click()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        <span data-i18n="btn_upload_img">🖼️ Subir imagen / captura de pantalla</span>
+      </button>
+      <input type="file" id="filePickerInput" accept="image/*" style="display:none" onchange="handleImageUpload(event)">
+    </div>
+
+    <!-- RESULT -->
+    <div class="card" id="resultCard" style="display:none">
+      <div class="section-title" data-i18n="result_title">Resultado</div>
+      <div class="result-area visible" id="resultArea">
+        <div class="thumb-wrap" id="thumbWrap">
+          <img id="thumbImg" src="" alt="Miniatura">
+          <div class="thumb-play">
+            <div class="play-icon">
+              <svg viewBox="0 0 24 24" width="22" height="22" fill="#333"><polygon points="5,3 19,12 5,21"/></svg>
+            </div>
+          </div>
+        </div>
+        <div class="result-actions">
+          <button class="btn" style="--btn-color:#25D366" onclick="shareWhatsApp()">
+            <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.136.563 4.14 1.535 5.874L0 24l6.299-1.519A11.933 11.933 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.797 9.797 0 0 1-5.018-1.382l-.36-.214-3.735.98.998-3.645-.234-.374A9.786 9.786 0 0 1 2.182 12C2.182 6.59 6.59 2.182 12 2.182S21.818 6.59 21.818 12 17.41 21.818 12 21.818z"/></svg>
+            <span data-i18n="btn_wa_status">Estado WhatsApp</span>
+          </button>
+          <button class="btn" onclick="shareNative()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+            <span data-i18n="btn_share">Compartir</span>
+          </button>
+          <button class="btn" onclick="downloadThumb()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            <span data-i18n="btn_download">Descargar</span>
+          </button>
+          <button class="btn" onclick="addToLibrary()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+            <span data-i18n="btn_library">Biblioteca</span>
+          </button>
+          <button class="btn" onclick="openCatModal()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+            <span data-i18n="btn_category">Categoría</span>
+          </button>
+          <button class="btn btn-full-row" style="--btn-color:#ff6b35;grid-column:1/-1" onclick="openThumbEditor()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h.01M9 15h.01M15 9h.01M15 15h.01"/><path d="M8 12h8"/></svg>
+            <span data-i18n="btn_editor">✏️ Añadir texto y stickers</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======== LIBRARY PANEL ======== -->
+  <div class="panel" id="panel-library">
+    <div class="card">
+      <div class="section-title">Biblioteca</div>
+      <div class="search-bar">
+        <input class="url-input" id="libSearch" placeholder="Buscar en biblioteca…" oninput="renderLibrary()">
+        <select class="styled-select" id="catFilter" onchange="renderLibrary()">
+          <option value="">Todas</option>
+        </select>
+      </div>
+      <div class="lib-grid" id="libGrid"></div>
+      <div class="empty-state" id="libEmpty">
+        <div class="empty-icon">🎬</div>
+        <div>Tu biblioteca está vacía</div>
+        <div style="font-size:0.8rem;margin-top:4px">Extrae una miniatura y guárdala</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======== SETTINGS PANEL ======== -->
+  <div class="panel" id="panel-settings">
+
+    <!-- Themes -->
+    <div class="card">
+      <div class="section-title">Tema visual</div>
+      <div class="theme-grid">
+        <div class="theme-card theme-tron selected" data-theme="tron" onclick="setTheme('tron',this)">
+          <div class="theme-dot" style="background:#00f5ff;box-shadow:0 0 8px #00f5ff"></div>
+          TRON
+        </div>
+        <div class="theme-card theme-matrix" data-theme="matrix" onclick="setTheme('matrix',this)">
+          <div class="theme-dot" style="background:#00ff41;box-shadow:0 0 8px #00ff41"></div>
+          MATRIX
+        </div>
+        <div class="theme-card theme-gold" data-theme="gold" onclick="setTheme('gold',this)">
+          <div class="theme-dot" style="background:#ffd700;box-shadow:0 0 8px #ffd700"></div>
+          GOLD
+        </div>
+      </div>
+    </div>
+
+    <!-- Button Customization -->
+    <div class="card">
+      <div class="section-title">Personalizar botones</div>
+      <div class="settings-row">
+        <div>
+          <div class="settings-label">Forma</div>
+          <div class="settings-desc">Radio de esquinas</div>
+        </div>
+        <div class="shape-grid">
+          <div class="shape-opt active" data-r="0" onclick="setBtnShape(0,this)" style="border-radius:0">▭</div>
+          <div class="shape-opt" data-r="6" onclick="setBtnShape(6,this)" style="border-radius:6px">▭</div>
+          <div class="shape-opt" data-r="12" onclick="setBtnShape(12,this)" style="border-radius:12px">▭</div>
+          <div class="shape-opt" data-r="99" onclick="setBtnShape(99,this)" style="border-radius:99px">●</div>
+        </div>
+      </div>
+      <div class="settings-row">
+        <div>
+          <div class="settings-label">Color primario</div>
+        </div>
+        <div class="color-grid" id="colorPicker">
+          <div class="color-dot active" style="background:#00f5ff" data-color="#00f5ff" onclick="setBtnColor('#00f5ff',this)"></div>
+          <div class="color-dot" style="background:#ff006e" data-color="#ff006e" onclick="setBtnColor('#ff006e',this)"></div>
+          <div class="color-dot" style="background:#00ff41" data-color="#00ff41" onclick="setBtnColor('#00ff41',this)"></div>
+          <div class="color-dot" style="background:#ffd700" data-color="#ffd700" onclick="setBtnColor('#ffd700',this)"></div>
+          <div class="color-dot" style="background:#a259ff" data-color="#a259ff" onclick="setBtnColor('#a259ff',this)"></div>
+          <div class="color-dot" style="background:#ff6b35" data-color="#ff6b35" onclick="setBtnColor('#ff6b35',this)"></div>
+          <input type="color" class="styled-select" style="width:28px;height:28px;padding:0;border-radius:50%;cursor:pointer" id="customColor" onchange="setBtnColor(this.value,null)">
+        </div>
+      </div>
+    </div>
+
+    <!-- Settings toggles -->
+    <div class="card">
+      <div class="section-title">Preferencias</div>
+
+      <div class="settings-row">
+        <div>
+          <div class="settings-label">🔊 Sonido de botones</div>
+          <div class="settings-desc">Click al interactuar</div>
+        </div>
+        <label class="toggle"><input type="checkbox" id="toggleSound" checked onchange="saveSetting('sound',this.checked)"><span class="toggle-slider"></span></label>
+      </div>
+
+      <div class="settings-row">
+        <div>
+          <div class="settings-label">🌧️ Efecto de fondo</div>
+          <div class="settings-desc">Animación Matrix/Grid</div>
+        </div>
+        <label class="toggle"><input type="checkbox" id="toggleBg" onchange="toggleBgEffect(this.checked)"><span class="toggle-slider"></span></label>
+      </div>
+
+      <div class="settings-row">
+        <div>
+          <div class="settings-label">✨ Brillo de bordes</div>
+          <div class="settings-desc">Animación de halo</div>
+        </div>
+        <label class="toggle"><input type="checkbox" id="toggleGlow" checked onchange="saveSetting('glow',this.checked)"><span class="toggle-slider"></span></label>
+      </div>
+
+      <div class="settings-row">
+        <div>
+          <div class="settings-label">📐 Alta resolución</div>
+          <div class="settings-desc">Miniatura maxresdefault</div>
+        </div>
+        <label class="toggle"><input type="checkbox" id="toggleHD" checked onchange="saveSetting('hd',this.checked)"><span class="toggle-slider"></span></label>
+      </div>
+
+      <div class="settings-row">
+        <div>
+          <div class="settings-label">📋 Auto-pegar URL</div>
+          <div class="settings-desc">Al abrir la app</div>
+        </div>
+        <label class="toggle"><input type="checkbox" id="toggleAutopaste" onchange="saveSetting('autopaste',this.checked)"><span class="toggle-slider"></span></label>
+      </div>
+
+      <div class="settings-row">
+        <div>
+          <div class="settings-label">🗃️ Guardar historial</div>
+          <div class="settings-desc">URLs recientes</div>
+        </div>
+        <label class="toggle"><input type="checkbox" id="toggleHistory" checked onchange="saveSetting('history',this.checked)"><span class="toggle-slider"></span></label>
+      </div>
+
+      <div class="settings-row">
+        <div>
+          <div class="settings-label">🖼️ Vista previa grande</div>
+          <div class="settings-desc">Miniatura en pantalla completa</div>
+        </div>
+        <label class="toggle"><input type="checkbox" id="toggleFullPreview" onchange="saveSetting('fullPreview',this.checked)"><span class="toggle-slider"></span></label>
+      </div>
+
+      <div class="settings-row">
+        <div>
+          <div class="settings-label">💾 Auto-guardar</div>
+          <div class="settings-desc">Guardar en biblioteca automáticamente</div>
+        </div>
+        <label class="toggle"><input type="checkbox" id="toggleAutoSave" onchange="saveSetting('autoSave',this.checked)"><span class="toggle-slider"></span></label>
+      </div>
+
+      <div class="settings-row">
+        <div>
+          <div class="settings-label">🔗 Abrir video al tocar</div>
+          <div class="settings-desc">Toca miniatura para abrir URL</div>
+        </div>
+        <label class="toggle"><input type="checkbox" id="toggleOpenVideo" checked onchange="saveSetting('openVideo',this.checked)"><span class="toggle-slider"></span></label>
+      </div>
+
+      <div class="settings-row">
+        <div>
+          <div class="settings-label">📦 Calidad miniatura</div>
+        </div>
+        <select class="styled-select" id="qualitySelect" onchange="saveSetting('quality',this.value)">
+          <option value="maxresdefault">Máxima (1280×720)</option>
+          <option value="hqdefault">Alta (480×360)</option>
+          <option value="mqdefault">Media (320×180)</option>
+          <option value="default">Estándar (120×90)</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- AI API Settings -->
+    <div class="card">
+      <div class="section-title">🤖 IA — Generar imagen</div>
+      <div class="settings-row" style="flex-direction:column;align-items:flex-start;gap:10px">
+        <div>
+          <div class="settings-label">Proveedor de IA</div>
+          <div class="settings-desc">Selecciona el servicio y pega tu API Key</div>
+        </div>
+        <select class="styled-select" id="aiProvider" style="width:100%" onchange="onAiProviderChange()">
+          <optgroup label="Groq AI">
+            <option value="groq|llama-3.3-70b-versatile">Groq · Llama 3.3 70B (recomendado)</option>
+            <option value="groq|llama-3.1-70b-versatile">Groq · Llama 3.1 70B</option>
+            <option value="groq|llama-3.1-8b-instant">Groq · Llama 3.1 8B (rápido)</option>
+            <option value="groq|mixtral-8x7b-32768">Groq · Mixtral 8x7B</option>
+            <option value="groq|gemma2-9b-it">Groq · Gemma 2 9B</option>
+          </optgroup>
+          <optgroup label="Google Gemini">
+            <option value="gemini|gemini-2.5-pro-preview-05-06">Gemini 2.5 Pro Preview (último)</option>
+            <option value="gemini|gemini-2.0-flash">Gemini 2.0 Flash</option>
+            <option value="gemini|gemini-1.5-pro">Gemini 1.5 Pro</option>
+            <option value="gemini|gemini-1.5-flash">Gemini 1.5 Flash</option>
+          </optgroup>
+        </select>
+        <div style="width:100%;position:relative">
+          <input class="url-input" id="aiApiKey" type="password" placeholder="Pega tu API Key aquí…" style="width:100%;padding-right:44px" oninput="saveAiSettings()">
+          <button onclick="toggleApiKeyVisibility()" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text2);cursor:pointer;font-size:1rem" title="Mostrar/ocultar">👁</button>
+        </div>
+        <div class="settings-desc" id="aiProviderHint" style="color:var(--accent);font-size:0.72rem"></div>
+        <div style="width:100%">
+          <div class="settings-label" style="font-size:0.85rem;margin-bottom:6px">Prompt para generar imagen</div>
+          <textarea id="aiPromptTpl" class="url-input" rows="4" placeholder="Describe la imagen que quieres generar. Usa {Título del video} y {Descripción del video} como variables." style="width:100%;resize:vertical;font-size:0.85rem" oninput="saveAiSettings()">Genera una ilustración atractiva y llamativa que represente el tema del video titulado: "{Título del video}" con la descripción: "{Descripción del video}". La imagen debe ser estilo miniatura para compartir en redes sociales, con colores vivos y composición clara.</textarea>
+        </div>
+        <button class="btn btn-sm btn-primary" onclick="testAiConnection()">🔌 Probar conexión</button>
+      </div>
+    </div>
+
+    <!-- Data management -->
+    <div class="card">
+      <div class="section-title">Datos</div>
+      <div style="display:flex;flex-wrap:wrap;gap:10px">
+        <button class="btn btn-sm" onclick="exportData()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Descargar JSON
+        </button>
+        <button class="btn btn-sm" onclick="document.getElementById('importFile').click()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          Importar JSON
+        </button>
+        <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
+        <button class="btn btn-sm" style="border-color:#ff4444;color:#ff4444" onclick="confirmClear()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+          Borrar todo
+        </button>
+      </div>
+    </div>
+
+    <!-- Language -->
+    <div class="card">
+      <div class="section-title" data-i18n="settings_lang">🌐 Idioma / Language</div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px">
+        <button class="btn btn-sm lang-btn active" data-lang="es" onclick="setLanguage('es',this)">🇪🇸 Español</button>
+        <button class="btn btn-sm lang-btn" data-lang="en" onclick="setLanguage('en',this)">🇺🇸 English</button>
+        <button class="btn btn-sm lang-btn" data-lang="zh" onclick="setLanguage('zh',this)">🇹🇼 繁體中文</button>
+        <button class="btn btn-sm lang-btn" data-lang="hi" onclick="setLanguage('hi',this)">🇮🇳 हिन्दी</button>
+        <button class="btn btn-sm lang-btn" data-lang="id" onclick="setLanguage('id',this)">🇮🇩 Indonesia</button>
+        <button class="btn btn-sm lang-btn" data-lang="tl" onclick="setLanguage('tl',this)">🇵🇭 Filipino</button>
+        <button class="btn btn-sm lang-btn" data-lang="ru" onclick="setLanguage('ru',this)">🇷🇺 Русский</button>
+      </div>
+    </div>
+
+    <!-- Manual -->
+    <div class="card">
+      <div class="section-title" data-i18n="settings_manual">📖 Manual de uso</div>
+      <div id="manualContent" style="font-size:0.84rem;color:var(--text2);line-height:1.7">
+        <div style="margin-bottom:12px">
+          <div style="color:var(--accent);font-weight:700;margin-bottom:4px" data-i18n="manual_s1_title">🏠 INICIO — Obtener miniaturas</div>
+          <div data-i18n="manual_s1_body">Pega la URL de un video de YouTube, Facebook, Instagram, TikTok, Vimeo o Twitter/X en el campo de texto y pulsa la lupa. Usa <b>Pegar desde portapapeles</b> para pegar automáticamente. Una vez obtenida la miniatura puedes compartirla en WhatsApp, descargarla o guardarla en la biblioteca.<br><br><b>💡 Truco para Instagram y Facebook:</b> el botón <b>🖼️ Subir imagen / captura de pantalla</b> es la opción más recomendada para estas redes. Haz un pantallazo del contenido que quieras compartir, luego pulsa ese botón, selecciona tu captura desde la galería y se abrirá el editor de recorte automático. Allí puedes recortar los bordes, ajustar la proporción y luego usar el editor para añadir texto, stickers y más antes de compartirlo.</div>
+        </div>
+        <div style="margin-bottom:12px">
+          <div style="color:var(--accent);font-weight:700;margin-bottom:4px" data-i18n="manual_s2_title">✨ IA — Generar miniatura</div>
+          <div data-i18n="manual_s2_body"><b>Generar miniatura con IA:</b> usa el título y descripción del video para crear una ilustración personalizada. Requiere API Key de Groq o Gemini (configúrala en Ajustes → IA).<br><b>Generar desde mi prompt:</b> escribe una descripción libre y la IA genera la imagen.<br><b>Obtener imagen original con IA:</b> analiza la URL, extrae el og:image si existe o genera una ilustración representativa del contenido.</div>
+        </div>
+        <div style="margin-bottom:12px">
+          <div style="color:var(--accent);font-weight:700;margin-bottom:4px" data-i18n="manual_s3_title">✏️ Editor de miniaturas</div>
+          <div data-i18n="manual_s3_body">Pulsa <b>Añadir texto y stickers</b> en el resultado para abrir el editor. Puedes: añadir texto con 15 fuentes y 5 estilos (CTA, Neón, Sombra, Contorno, Fuego), elegir color o gradiente, ajustar tamaño con el slider, mover elementos arrastrando o con pellizco para escalar, añadir stickers emoji y exportar la imagen editada.<br><br><b>Flujo recomendado para Instagram/Facebook:</b> sube tu captura de pantalla con el botón <b>🖼️ Subir imagen</b> → recórtala en el editor → pulsa "Recortar y usar" → pulsa "Añadir texto y stickers" para personalizarla → comparte.</div>
+        </div>
+        <div style="margin-bottom:12px">
+          <div style="color:var(--accent);font-weight:700;margin-bottom:4px" data-i18n="manual_s4_title">📚 Biblioteca</div>
+          <div data-i18n="manual_s4_body">Guarda miniaturas con el botón <b>Biblioteca</b>. Asigna categorías para organizarlas. Usa el buscador para filtrar. Desde cada tarjeta puedes compartir, descargar o eliminar.</div>
+        </div>
+        <div style="margin-bottom:12px">
+          <div style="color:var(--accent);font-weight:700;margin-bottom:4px" data-i18n="manual_s5_title">⚙️ Ajustes</div>
+          <div data-i18n="manual_s5_body"><b>Tema visual:</b> TRON (cian), MATRIX (verde), GOLD (dorado).<br><b>Personalizar botones:</b> forma (esquinas) y color primario.<br><b>Preferencias:</b> sonido, efecto fondo, brillo, calidad miniatura, auto-pegar, historial, auto-guardar, abrir video al tocar.<br><b>IA:</b> configura tu proveedor (Groq/Gemini), modelo y API Key. Personaliza el prompt plantilla.<br><b>Datos:</b> exporta/importa tu biblioteca en JSON.<br><b>Idioma:</b> cambia el idioma de toda la interfaz.</div>
+        </div>
+        <div style="margin-bottom:4px">
+          <div style="color:var(--accent);font-weight:700;margin-bottom:4px" data-i18n="manual_s6_title">📲 Instalar como app</div>
+          <div data-i18n="manual_s6_body">WAMS es una PWA. En Chrome/Edge pulsa el botón 📲 en la cabecera o el banner de instalación para instalarla en tu dispositivo como app nativa.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Credits -->
+    <div class="credits">
+      <p>© 2026 <strong style="color:var(--accent)">WhatsApp Media Share (WAMS)</strong></p>
+      <p>Todos los derechos reservados.</p>
+      <p>Creado por
+        <a href="https://www.linkedin.com/in/jaime-andrés-dueñas-vicuña" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+          Jaime Andrés Dueñas Vicuña
+        </a>
+      </p>
+      <p style="margin-top:8px">
+        <a href="https://www.paypal.com/paypalme/texiduvi" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14"><path d="M7.076 21.337H2.47a.641.641 0 0 1-.633-.74L4.944.901C5.026.382 5.474 0 5.998 0h7.46c2.57 0 4.578.543 5.69 1.81 1.01 1.15 1.304 2.42 1.012 4.287-.023.143-.047.291-.077.448-.983 5.05-4.349 6.797-8.647 6.797h-2.19c-.524 0-.968.382-1.05.9l-1.12 7.095zm14.146-14.42a3.35 3.35 0 0 0-.607-.541c-.013.076-.026.175-.041.254-.93 4.778-4.005 7.201-9.138 7.201h-2.19a.563.563 0 0 0-.556.479l-1.187 7.527h-.506l-.24 1.516a.56.56 0 0 0 .554.647h3.882c.46 0 .85-.334.922-.788.06-.26.76-4.852.816-5.09a.932.932 0 0 1 .923-.788h.58c3.76 0 6.705-1.528 7.565-5.946.36-1.847.174-3.388-.777-4.471z"/></svg>
+          Apoyar con PayPal
+        </a>
+      </p>
+    </div>
+
+  </div>
+
+</main>
+
+<!-- BOTTOM NAV -->
+<nav class="bottom-nav">
+  <button class="bnav-btn active" id="bnav-home" onclick="playSound('click');showPanel('home')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    <span data-i18n="nav_home">INICIO</span>
+  </button>
+  <button class="bnav-btn" id="bnav-library" onclick="playSound('click');showPanel('library');renderLibrary()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+    <span data-i18n="nav_library">BIBLIOTECA</span>
+  </button>
+  <button class="bnav-btn" id="bnav-settings" onclick="playSound('click');showPanel('settings')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    <span data-i18n="nav_settings">AJUSTES</span>
+  </button>
+</nav>
+
+<!-- CATEGORY MODAL -->
+<div class="modal-overlay" id="catModal">
+  <div class="modal">
+    <div class="modal-title">ASIGNAR CATEGORÍA</div>
+    <input class="text-input" id="newCatInput" placeholder="Nueva categoría…">
+    <div class="cat-list" id="catListModal"></div>
+    <div style="display:flex;gap:8px;margin-top:8px">
+      <button class="btn btn-primary" style="flex:1" onclick="saveToCat()">Guardar</button>
+      <button class="btn" onclick="closeCatModal()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- CLEAR CONFIRM MODAL -->
+<div class="modal-overlay" id="clearModal">
+  <div class="modal">
+    <div class="modal-title">⚠️ BORRAR TODOS LOS DATOS</div>
+    <p style="color:var(--text2);font-size:0.9rem;margin-bottom:16px">Esta acción no se puede deshacer. Se eliminarán todos los videos de tu biblioteca y configuraciones.</p>
+    <div style="display:flex;gap:8px">
+      <button class="btn" style="flex:1;border-color:#ff4444;color:#ff4444" onclick="clearAll()">Sí, borrar todo</button>
+      <button class="btn btn-primary" style="flex:1" onclick="document.getElementById('clearModal').classList.remove('open')">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST CONTAINER -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- PROMPT AI MODAL -->
+<div class="modal-overlay" id="promptAIModal">
+  <div class="modal" style="max-width:420px;width:92%">
+    <div class="modal-title">🖊️ GENERAR DESDE PROMPT</div>
+    <div class="settings-desc" style="margin-bottom:10px">Describe la imagen que quieres generar</div>
+    <textarea id="userPromptInput" class="url-input" rows="4" placeholder="Ej: Un astronauta surfeando en Marte al atardecer con colores épicos…" style="width:100%;resize:vertical;font-size:0.9rem;margin-bottom:12px"></textarea>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-primary" style="flex:1" id="btnRunPrompt" onclick="runPromptAI()">✨ Generar</button>
+      <button class="btn" onclick="document.getElementById('promptAIModal').classList.remove('open')">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- THUMB EDITOR MODAL -->
+<div class="modal-overlay" id="thumbEditorModal" style="align-items:flex-start;padding:0;background:rgba(0,0,0,0.96)">
+  <div style="width:100%;max-width:680px;margin:0 auto;display:flex;flex-direction:column;height:100dvh;overflow:hidden">
+    <!-- Editor Header -->
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0">
+      <span style="font-family:var(--font-display);font-size:0.8rem;letter-spacing:2px;color:var(--accent)">✏️ EDITOR</span>
+      <div style="display:flex;gap:6px">
+        <button class="btn btn-sm btn-primary" onclick="exportEditorImage()">💾 Guardar</button>
+        <button class="btn btn-sm" onclick="closeThumbEditor()">✕</button>
+      </div>
+    </div>
+    <!-- Canvas area -->
+    <div style="flex:1;overflow:auto;display:flex;align-items:center;justify-content:center;background:#000;padding:8px;min-height:0">
+      <div style="position:relative;display:inline-block;touch-action:none" id="editorCanvasWrap">
+        <canvas id="editorCanvas" style="display:block;max-width:100%;border-radius:4px"></canvas>
+        <!-- Text/sticker overlays rendered here -->
+        <div id="editorOverlay" style="position:absolute;inset:0;pointer-events:none"></div>
+      </div>
+    </div>
+    <!-- Tools tabs -->
+    <div style="flex-shrink:0;background:var(--surface);border-top:1px solid var(--border)">
+      <div style="display:flex;border-bottom:1px solid var(--border)">
+        <button class="editor-tab active" id="tab-text" onclick="switchEditorTab('text')">🔤 Texto</button>
+        <button class="editor-tab" id="tab-sticker" onclick="switchEditorTab('sticker')">😀 Stickers</button>
+      </div>
+      <!-- TEXT PANEL -->
+      <div id="editorPanelText" style="padding:12px;max-height:260px;overflow-y:auto">
+        <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap">
+          <input id="editorTextInput" class="url-input" style="flex:1;min-width:120px" placeholder="Escribe aquí…">
+          <button class="btn btn-sm btn-primary" onclick="addTextLayer()">+ Añadir</button>
+        </div>
+        <!-- Font selector -->
+        <div style="margin-bottom:8px">
+          <div class="settings-desc" style="margin-bottom:4px">Fuente</div>
+          <select id="editorFont" class="styled-select" style="width:100%" onchange="updateSelectedLayer()">
+            <option value="Impact">Impact (YouTube clásica)</option>
+            <option value="'Arial Black',sans-serif">Arial Black (bold)</option>
+            <option value="'Bebas Neue',cursive">Bebas Neue (moderna)</option>
+            <option value="'Permanent Marker',cursive">Permanent Marker (mano)</option>
+            <option value="'Bangers',cursive">Bangers (cómic)</option>
+            <option value="'Oswald',sans-serif">Oswald (condensada)</option>
+            <option value="'Pacifico',cursive">Pacifico (redondeada)</option>
+            <option value="'Righteous',cursive">Righteous (futurista)</option>
+            <option value="'Lobster',cursive">Lobster (elegante)</option>
+            <option value="'Fredoka One',cursive">Fredoka One (kawaii)</option>
+            <option value="'Anton',sans-serif">Anton (impacto)</option>
+            <option value="'Russo One',sans-serif">Russo One (tecnológica)</option>
+            <option value="'Creepster',cursive">Creepster (terror)</option>
+            <option value="'Chewy',cursive">Chewy (divertida)</option>
+            <option value="Georgia,serif">Georgia (clásica)</option>
+          </select>
+        </div>
+        <!-- Style presets -->
+        <div style="margin-bottom:8px">
+          <div class="settings-desc" style="margin-bottom:4px">Estilo</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            <button class="style-preset" data-style="cta" onclick="applyTextStyle('cta')">🔥 CTA</button>
+            <button class="style-preset" data-style="neon" onclick="applyTextStyle('neon')">💜 Neón</button>
+            <button class="style-preset" data-style="shadow" onclick="applyTextStyle('shadow')">🌑 Sombra</button>
+            <button class="style-preset" data-style="outline" onclick="applyTextStyle('outline')">⬜ Contorno</button>
+            <button class="style-preset" data-style="fire" onclick="applyTextStyle('fire')">🔆 Fuego</button>
+          </div>
+        </div>
+        <!-- Size -->
+        <div style="margin-bottom:8px;display:flex;gap:10px;align-items:center">
+          <div class="settings-desc">Tamaño</div>
+          <input type="range" class="styled-range" id="editorFontSize" min="12" max="120" value="48" style="flex:1" oninput="updateSelectedLayer()">
+          <span id="editorFontSizeVal" style="font-size:0.8rem;color:var(--accent);min-width:32px">48</span>
+        </div>
+        <!-- Color -->
+        <div style="margin-bottom:8px">
+          <div class="settings-desc" style="margin-bottom:4px">Color del texto</div>
+          <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+            <div class="color-dot active" style="background:#ffffff" onclick="setTextColor('#ffffff',this)"></div>
+            <div class="color-dot" style="background:#ffff00" onclick="setTextColor('#ffff00',this)"></div>
+            <div class="color-dot" style="background:#ff4444" onclick="setTextColor('#ff4444',this)"></div>
+            <div class="color-dot" style="background:#44ff44" onclick="setTextColor('#44ff44',this)"></div>
+            <div class="color-dot" style="background:#4488ff" onclick="setTextColor('#4488ff',this)"></div>
+            <div class="color-dot" style="background:#ff44ff" onclick="setTextColor('#ff44ff',this)"></div>
+            <div class="color-dot" style="background:#00f5ff" onclick="setTextColor('#00f5ff',this)"></div>
+            <div class="color-dot" style="background:#ff8800" onclick="setTextColor('#ff8800',this)"></div>
+            <div class="color-dot" style="background:#000000;border:1px solid #555" onclick="setTextColor('#000000',this)"></div>
+            <input type="color" class="styled-select" style="width:28px;height:28px;padding:0;border-radius:50%;cursor:pointer" id="textColorCustom" onchange="setTextColor(this.value,null)">
+          </div>
+        </div>
+        <!-- Gradient toggle -->
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+          <div class="settings-label" style="font-size:0.85rem">Gradiente</div>
+          <label class="toggle"><input type="checkbox" id="textGradient" onchange="updateSelectedLayer()"><span class="toggle-slider"></span></label>
+          <input type="color" id="textGradientColor2" value="#ff006e" style="width:28px;height:28px;padding:0;border-radius:50%;cursor:pointer;background:none;border:1px solid var(--border)" onchange="updateSelectedLayer()">
+        </div>
+        <!-- Selected layer controls -->
+        <div id="layerControls" style="display:none;padding:8px;background:var(--bg2);border-radius:8px;border:1px solid var(--border)">
+          <div style="font-size:0.78rem;color:var(--accent);margin-bottom:6px">Capa seleccionada</div>
+          <div style="display:flex;gap:6px">
+            <button class="btn btn-sm" onclick="deleteSelectedLayer()" style="--btn-color:#ff4444;flex:1">🗑 Eliminar</button>
+            <button class="btn btn-sm" onclick="duplicateSelectedLayer()" style="flex:1">⊕ Duplicar</button>
+          </div>
+        </div>
+      </div>
+      <!-- STICKER PANEL -->
+      <div id="editorPanelSticker" style="display:none;padding:12px;max-height:260px;overflow-y:auto">
+        <div class="settings-desc" style="margin-bottom:8px">Toca un sticker para añadirlo · Pellizca o arrastra para moverlo</div>
+        <div id="stickerGrid" style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SCREENSHOT CROP MODAL -->
+<div class="modal-overlay" id="screenshotModal" style="align-items:flex-start;padding:0;background:rgba(0,0,0,0.97)">
+  <div style="width:100%;max-width:680px;margin:0 auto;display:flex;flex-direction:column;height:100dvh">
+    <!-- Header -->
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0">
+      <span style="font-family:var(--font-display);font-size:0.8rem;letter-spacing:2px;color:var(--accent)">📸 CAPTURA / RECORTE</span>
+      <div style="display:flex;gap:6px">
+        <button class="btn btn-sm btn-primary" onclick="cropAndUseScreenshot()">✂️ Recortar y usar</button>
+        <button class="btn btn-sm" onclick="document.getElementById('screenshotModal').classList.remove('open')">✕</button>
+      </div>
+    </div>
+    <!-- Instructions -->
+    <div style="padding:10px 14px;background:var(--bg2);border-bottom:1px solid var(--border);flex-shrink:0;font-size:0.8rem;color:var(--text2)">
+      Ajusta el recuadro de recorte arrastrando las esquinas · Auto-recorta bordes negros automáticamente
+    </div>
+    <!-- Canvas wrap -->
+    <div style="flex:1;overflow:auto;display:flex;align-items:center;justify-content:center;background:#111;padding:8px;min-height:0;position:relative">
+      <div style="position:relative;display:inline-block;touch-action:none" id="cropWrap">
+        <canvas id="screenshotCanvas" style="display:block;max-width:100%;border-radius:4px"></canvas>
+        <!-- Crop overlay -->
+        <div id="cropOverlay" style="position:absolute;inset:0;pointer-events:none">
+          <svg id="cropSVG" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none">
+            <defs><mask id="cropMask"><rect width="100%" height="100%" fill="white"/><rect id="cropHole" fill="black"/></mask></defs>
+            <rect width="100%" height="100%" fill="rgba(0,0,0,0.55)" mask="url(#cropMask)"/>
+            <rect id="cropRect" fill="none" stroke="#00f5ff" stroke-width="2" stroke-dasharray="6 3"/>
+          </svg>
+          <!-- 8 handles -->
+          <div class="crop-handle" id="ch-tl" style="top:0;left:0;cursor:nw-resize"></div>
+          <div class="crop-handle" id="ch-tc" style="top:0;left:50%;transform:translateX(-50%);cursor:n-resize"></div>
+          <div class="crop-handle" id="ch-tr" style="top:0;right:0;cursor:ne-resize"></div>
+          <div class="crop-handle" id="ch-ml" style="top:50%;left:0;transform:translateY(-50%);cursor:w-resize"></div>
+          <div class="crop-handle" id="ch-mr" style="top:50%;right:0;transform:translateY(-50%);cursor:e-resize"></div>
+          <div class="crop-handle" id="ch-bl" style="bottom:0;left:0;cursor:sw-resize"></div>
+          <div class="crop-handle" id="ch-bc" style="bottom:0;left:50%;transform:translateX(-50%);cursor:s-resize"></div>
+          <div class="crop-handle" id="ch-br" style="bottom:0;right:0;cursor:se-resize"></div>
+        </div>
+      </div>
+    </div>
+    <!-- Tools -->
+    <div style="padding:10px 14px;border-top:1px solid var(--border);background:var(--surface);flex-shrink:0;display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn btn-sm" onclick="autoTrimBorders()">✨ Auto-recortar bordes</button>
+      <button class="btn btn-sm" onclick="resetCrop()">↺ Restablecer</button>
+      <button class="btn btn-sm" onclick="setCropAspect(16,9)">16:9</button>
+      <button class="btn btn-sm" onclick="setCropAspect(1,1)">1:1</button>
+      <button class="btn btn-sm" onclick="setCropAspect(4,5)">4:5</button>
+      <button class="btn btn-sm" onclick="document.getElementById('filePickerInput').click()">📁 Cambiar imagen</button>
+    </div>
+  </div>
+</div>
+
+<!-- AUDIO ELEMENTS -->
+<audio id="sndClick" preload="auto">
+  <source src="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=" type="audio/wav">
+</audio>
+
+<script>
+// ============================
+// STATE
+// ============================
+let db = {
+  library: [],
+  categories: ['Música', 'Tutorial', 'Entretenimiento', 'Noticias', 'Deportes'],
+  settings: {
+    theme: 'tron',
+    sound: true,
+    glow: true,
+    hd: true,
+    autopaste: false,
+    history: true,
+    fullPreview: false,
+    autoSave: false,
+    openVideo: true,
+    quality: 'maxresdefault',
+    btnShape: 8,
+    btnColor: '#00f5ff',
+    bgEffect: false,
+    aiProvider: 'groq|llama-3.3-70b-versatile',
+    aiApiKey: '',
+    aiPromptTpl: 'Genera una ilustración atractiva y llamativa que represente el tema del video titulado: "{Título del video}" con la descripción: "{Descripción del video}". La imagen debe ser estilo miniatura para compartir en redes sociales, con colores vivos y composición clara.',
+    lang: 'es'
+  }
+};
+
+let currentThumbUrl = '';
+let currentVideoUrl = '';
+let selectedCat = '';
+let deferredPrompt = null;
+
+// ============================
+// INIT
+// ============================
+function init() {
+  loadData();
+  applySettings();
+  initServiceWorker();
+  checkSharedContent();
+  initMatrixCanvas();
+
+  // Halo on all buttons
+  document.addEventListener('click', addHaloEffect);
+}
+
+function loadData() {
+  try {
+    const saved = localStorage.getItem('wams_db');
+    if (saved) db = { ...db, ...JSON.parse(saved) };
+  } catch(e) {}
+  applyAllSettings();
+}
+
+function saveData() {
+  localStorage.setItem('wams_db', JSON.stringify(db));
+}
+
+function applyAllSettings() {
+  const s = db.settings;
+  document.getElementById('toggleSound').checked = s.sound;
+  document.getElementById('toggleBg').checked = s.bgEffect;
+  document.getElementById('toggleGlow').checked = s.glow !== false;
+  document.getElementById('toggleHD').checked = s.hd !== false;
+  document.getElementById('toggleAutopaste').checked = s.autopaste;
+  document.getElementById('toggleHistory').checked = s.history !== false;
+  document.getElementById('toggleFullPreview').checked = s.fullPreview;
+  document.getElementById('toggleAutoSave').checked = s.autoSave;
+  document.getElementById('toggleOpenVideo').checked = s.openVideo !== false;
+  if (document.getElementById('qualitySelect'))
+    document.getElementById('qualitySelect').value = s.quality || 'maxresdefault';
+  setTheme(s.theme || 'tron', null, true);
+  setBtnShape(s.btnShape || 8, null, true);
+  setBtnColor(s.btnColor || '#00f5ff', null, true);
+  if (s.bgEffect) toggleBgEffect(true);
+  // AI settings
+  if (document.getElementById('aiProvider')) {
+    document.getElementById('aiProvider').value = s.aiProvider || 'groq|llama-3.3-70b-versatile';
+    document.getElementById('aiApiKey').value = s.aiApiKey || '';
+    document.getElementById('aiPromptTpl').value = s.aiPromptTpl || 'Genera una ilustración atractiva y llamativa que represente el tema del video titulado: "{Título del video}" con la descripción: "{Descripción del video}". La imagen debe ser estilo miniatura para compartir en redes sociales, con colores vivos y composición clara.';
+    onAiProviderChange();
+  }
+  // Language
+  if (s.lang && s.lang !== 'es') {
+    currentLang = s.lang;
+    applyI18n();
+    const lb = document.querySelector(`[data-lang="${s.lang}"]`);
+    if (lb) { document.querySelectorAll('.lang-btn').forEach(x => x.classList.remove('active')); lb.classList.add('active'); }
+  }
+}
+
+function saveSetting(key, val) {
+  db.settings[key] = val;
+  saveData();
+}
+
+// ============================
+// PANELS
+// ============================
+function showPanel(name) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('panel-' + name).classList.add('active');
+  document.querySelectorAll('.bnav-btn').forEach(b => b.classList.remove('active'));
+  const nb = document.getElementById('bnav-' + name);
+  if (nb) nb.classList.add('active');
+}
+
+// ============================
+// SOUND
+// ============================
+function playSound(type) {
+  if (!db.settings.sound) return;
+  try {
+    // Create oscillator for click sound
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.frequency.value = type === 'click' ? 800 : 400;
+    osc.type = 'sine';
+    gain.gain.setValueAtTime(0.1, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.08);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.08);
+  } catch(e) {}
+}
+
+function toggleSound() {
+  db.settings.sound = !db.settings.sound;
+  saveData();
+  const btn = document.getElementById('volBtn');
+  btn.textContent = db.settings.sound ? '🔊' : '🔇';
+  btn.classList.toggle('vol-muted', !db.settings.sound);
+  document.getElementById('toggleSound').checked = db.settings.sound;
+  if (db.settings.sound) playSound('click');
+}
+
+// ============================
+// HALO EFFECT
+// ============================
+function addHaloEffect(e) {
+  const btn = e.target.closest('.btn, .nav-btn, .bnav-btn');
+  if (!btn) return;
+  const halo = document.createElement('span');
+  halo.className = 'btn-halo';
+  const rect = btn.getBoundingClientRect();
+  halo.style.left = (e.clientX - rect.left) + 'px';
+  halo.style.top = (e.clientY - rect.top) + 'px';
+  btn.style.position = 'relative';
+  btn.appendChild(halo);
+  setTimeout(() => halo.remove(), 600);
+}
+
+// ============================
+// YOUTUBE / FACEBOOK ID
+// ============================
+function getYouTubeID(url) {
+  const patterns = [
+    /youtu\.be\/([^?&#]+)/,
+    /[?&]v=([^?&#]+)/,
+    /embed\/([^?&#]+)/,
+    /shorts\/([^?&#]+)/,
+    /v\/([^?&#]+)/
+  ];
+  for (const p of patterns) {
+    const m = url.match(p);
+    if (m && m[1] && m[1].length === 11) return m[1];
+  }
+  return null;
+}
+
+async function getOembedThumb(url) {
+  // Try noembed.com which supports Facebook, Instagram, Vimeo, Twitter/X, TikTok, Dailymotion, etc.
+  try {
+    const apiUrl = `https://noembed.com/embed?url=${encodeURIComponent(url)}`;
+    const res = await fetch(apiUrl);
+    if (!res.ok) return null;
+    const data = await res.json();
+    if (data && data.thumbnail_url) return data.thumbnail_url;
+  } catch(e) {}
+  return null;
+}
+
+function getInstagramID(url) {
+  const m = url.match(/instagram\.com\/(?:p|reel|tv)\/([A-Za-z0-9_-]+)/);
+  return m ? m[1] : null;
+}
+
+function getVimeoID(url) {
+  const m = url.match(/vimeo\.com\/(?:video\/)?(\d+)/);
+  return m ? m[1] : null;
+}
+
+async function fetchThumbnail() {
+  playSound('click');
+  const url = document.getElementById('urlInput').value.trim();
+  if (!url) { showToast('Pega una URL válida'); return; }
+
+  currentVideoUrl = url;
+  const quality = db.settings.quality || 'maxresdefault';
+
+  // YouTube
+  const ytId = getYouTubeID(url);
+  if (ytId) {
+    const thumbUrl = `https://img.youtube.com/vi/${ytId}/${quality}.jpg`;
+    showThumbnail(thumbUrl, url);
+    if (db.settings.autoSave) addToLibrary(true);
+    return;
+  }
+
+  // Vimeo
+  const vimeoId = getVimeoID(url);
+  if (vimeoId) {
+    showToast('⏳ Vimeo…');
+    try {
+      const res = await fetch(`https://vimeo.com/api/oembed.json?url=${encodeURIComponent(url)}`);
+      const data = await res.json();
+      if (data.thumbnail_url) {
+        showThumbnail(data.thumbnail_url.replace(/_\d+x\d+(\.\w+)$/, '_1280$1'), url);
+        if (db.settings.autoSave) addToLibrary(true);
+        return;
+      }
+    } catch(e) {}
+  }
+
+  // Dailymotion
+  const dmMatch = url.match(/dailymotion\.com\/video\/([a-zA-Z0-9]+)/);
+  if (dmMatch) {
+    showThumbnail(`https://www.dailymotion.com/thumbnail/video/${dmMatch[1]}`, url);
+    if (db.settings.autoSave) addToLibrary(true);
+    return;
+  }
+
+  // Twitch clip
+  const twitchClip = url.match(/twitch\.tv\/\w+\/clip\/([A-Za-z0-9_-]+)|clips\.twitch\.tv\/([A-Za-z0-9_-]+)/);
+  if (twitchClip) {
+    showToast('⏳ Twitch…');
+    try {
+      const slug = twitchClip[1] || twitchClip[2];
+      const res = await fetch(`https://noembed.com/embed?url=${encodeURIComponent(url)}`);
+      const d = await res.json();
+      if (d.thumbnail_url) { showThumbnail(d.thumbnail_url, url); if (db.settings.autoSave) addToLibrary(true); return; }
+    } catch(e) {}
+  }
+
+  // Rumble
+  if (url.includes('rumble.com')) {
+    showToast('⏳ Rumble…');
+    try {
+      const res = await fetch(`https://noembed.com/embed?url=${encodeURIComponent(url)}`);
+      const d = await res.json();
+      if (d.thumbnail_url) { showThumbnail(d.thumbnail_url, url); if (db.settings.autoSave) addToLibrary(true); return; }
+    } catch(e) {}
+  }
+
+  // Odysee / LBRY
+  if (url.includes('odysee.com')) {
+    showToast('⏳ Odysee…');
+    try {
+      const res = await fetch(`https://noembed.com/embed?url=${encodeURIComponent(url)}`);
+      const d = await res.json();
+      if (d.thumbnail_url) { showThumbnail(d.thumbnail_url, url); if (db.settings.autoSave) addToLibrary(true); return; }
+    } catch(e) {}
+  }
+
+  // Bilibili
+  const biliMatch = url.match(/bilibili\.com\/video\/(BV[A-Za-z0-9]+|av\d+)/i);
+  if (biliMatch) {
+    showToast('⏳ Bilibili…');
+    try {
+      const res = await fetch(`https://noembed.com/embed?url=${encodeURIComponent(url)}`);
+      const d = await res.json();
+      if (d.thumbnail_url) { showThumbnail(d.thumbnail_url, url); if (db.settings.autoSave) addToLibrary(true); return; }
+    } catch(e) {}
+  }
+
+  // Pinterest — image pins have direct og:image
+  if (url.includes('pinterest.com') || url.includes('pin.it')) {
+    showToast('⏳ Pinterest…');
+    try {
+      const res = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`, { signal: AbortSignal.timeout(7000) });
+      const d = await res.json();
+      const m = (d.contents||'').match(/property=["']og:image["']\s+content=["']([^"']+)["']/i)
+        || (d.contents||'').match(/"imageUrl"\s*:\s*"([^"]+)"/);
+      if (m?.[1]) { showThumbnail(m[1], url); if (db.settings.autoSave) addToLibrary(true); return; }
+    } catch(e) {}
+  }
+
+  // Reddit — use preview image
+  if (url.includes('reddit.com') || url.includes('redd.it')) {
+    showToast('⏳ Reddit…');
+    try {
+      const jsonUrl = url.replace(/\/$/, '') + '.json';
+      const res = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(jsonUrl)}`, { signal: AbortSignal.timeout(7000) });
+      const d = await res.json();
+      const parsed = JSON.parse(d.contents || '[]');
+      const post = parsed?.[0]?.data?.children?.[0]?.data;
+      const preview = post?.preview?.images?.[0]?.source?.url?.replace(/&amp;/g,'&');
+      const thumb = preview || post?.thumbnail;
+      if (thumb && thumb.startsWith('http')) { showThumbnail(thumb, url); if (db.settings.autoSave) addToLibrary(true); return; }
+    } catch(e) {}
+  }
+
+  // Imgur
+  if (url.includes('imgur.com')) {
+    const imgurImg = url.match(/imgur\.com\/(?:gallery\/)?([A-Za-z0-9]+)/);
+    if (imgurImg) {
+      const directUrl = `https://i.imgur.com/${imgurImg[1]}.jpg`;
+      showThumbnail(directUrl, url);
+      if (db.settings.autoSave) addToLibrary(true);
+      return;
+    }
+  }
+
+  // Flickr
+  if (url.includes('flickr.com')) {
+    showToast('⏳ Flickr…');
+    try {
+      const res = await fetch(`https://noembed.com/embed?url=${encodeURIComponent(url)}`);
+      const d = await res.json();
+      if (d.thumbnail_url) { showThumbnail(d.thumbnail_url, url); if (db.settings.autoSave) addToLibrary(true); return; }
+    } catch(e) {}
+  }
+
+  // Generic direct image URL
+  if (/\.(jpg|jpeg|png|gif|webp|avif|svg)(\?.*)?$/i.test(url)) {
+    showThumbnail(url, url);
+    if (db.settings.autoSave) addToLibrary(true);
+    return;
+  }
+
+  // Facebook / Instagram / TikTok / Twitter/X — social oEmbed + proxy
+  const isSocial = url.includes('facebook.com') || url.includes('fb.com') || url.includes('fb.watch')
+    || url.includes('instagram.com')
+    || url.includes('tiktok.com')
+    || url.includes('twitter.com') || url.includes('x.com');
+
+  if (isSocial) {
+    showToast('⏳ Obteniendo miniatura…');
+    const thumb = await getOembedThumb(url);
+    if (thumb) {
+      showThumbnail(thumb, url);
+      if (db.settings.autoSave) addToLibrary(true);
+      return;
+    }
+    const proxies = [
+      `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`,
+      `https://corsproxy.io/?${encodeURIComponent(url)}`
+    ];
+    for (const proxyUrl of proxies) {
+      try {
+        const res = await fetch(proxyUrl, { signal: AbortSignal.timeout(6000) });
+        const data = await res.json();
+        const html = data.contents || data.body || '';
+        const ogMatch = html.match(/property=["']og:image["']\s+content=["']([^"']+)["']/i)
+          || html.match(/content=["']([^"']+)["']\s+property=["']og:image["']/i)
+          || html.match(/"thumbnailUrl"\s*:\s*"([^"]+)"/i);
+        if (ogMatch?.[1]) {
+          showThumbnail(ogMatch[1], url);
+          if (db.settings.autoSave) addToLibrary(true);
+          return;
+        }
+      } catch(e) {}
+    }
+    showToast('⚠️ No se pudo obtener miniatura. Usa "Obtener imagen original con IA".');
+    return;
+  }
+
+  // Last resort: generic og:image scrape for any URL
+  showToast('⏳ Intentando obtener imagen…');
+  try {
+    const res = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`, { signal: AbortSignal.timeout(8000) });
+    const d = await res.json();
+    const html = d.contents || '';
+    const m = html.match(/property=["']og:image["']\s+content=["']([^"']+)["']/i)
+      || html.match(/content=["']([^"']+)["']\s+property=["']og:image["']/i)
+      || html.match(/<meta[^>]+name=["']twitter:image["'][^>]+content=["']([^"']+)["']/i);
+    if (m?.[1]) { showThumbnail(m[1], url); if (db.settings.autoSave) addToLibrary(true); return; }
+  } catch(e) {}
+
+  showToast('URL no reconocida. Prueba con YouTube, Vimeo, Twitch, Reddit, Pinterest, Imgur, TikTok, etc.');
+}
+
+function showThumbnail(thumbUrl, videoUrl) {
+  currentThumbUrl = thumbUrl;
+  const img = document.getElementById('thumbImg');
+  img.src = thumbUrl;
+  img.onerror = () => {
+    // Fallback quality
+    const ytId = getYouTubeID(videoUrl);
+    if (ytId) img.src = `https://img.youtube.com/vi/${ytId}/hqdefault.jpg`;
+  };
+
+  if (db.settings.openVideo) {
+    document.getElementById('thumbWrap').onclick = () => window.open(videoUrl, '_blank');
+  }
+
+  document.getElementById('resultCard').style.display = 'block';
+
+  if (db.settings.history) {
+    saveHistory(videoUrl, thumbUrl);
+  }
+}
+
+function saveHistory(url, thumb) {
+  let hist = JSON.parse(localStorage.getItem('wams_history') || '[]');
+  hist = hist.filter(h => h.url !== url);
+  hist.unshift({ url, thumb, date: Date.now() });
+  hist = hist.slice(0, 20);
+  localStorage.setItem('wams_history', JSON.stringify(hist));
+}
+
+// ============================
+// PASTE FROM CLIPBOARD
+// ============================
+async function pasteFromClipboard() {
+  playSound('click');
+  try {
+    const text = await navigator.clipboard.readText();
+    document.getElementById('urlInput').value = text;
+    fetchThumbnail();
+  } catch(e) {
+    showToast('Permiso de portapapeles denegado');
+  }
+}
+
+// ============================
+// SHARE WHATSAPP STATUS
+// ============================
+function shareWhatsApp() {
+  playSound('click');
+  if (!currentThumbUrl) { showToast('Primero obtén una miniatura'); return; }
+
+  // Try native share first to allow user to pick WhatsApp Status
+  if (navigator.share && navigator.canShare) {
+    // Download image as blob and share
+    fetch(currentThumbUrl)
+      .then(r => r.blob())
+      .then(blob => {
+        const file = new File([blob], 'miniatura_wams.jpg', { type: blob.type });
+        const shareData = {
+          files: [file],
+          title: 'Mira este video',
+          text: currentVideoUrl
+        };
+        if (navigator.canShare(shareData)) {
+          navigator.share(shareData)
+            .catch(() => fallbackWhatsAppShare());
+        } else {
+          fallbackWhatsAppShare();
+        }
+      })
+      .catch(() => fallbackWhatsAppShare());
+  } else {
+    fallbackWhatsAppShare();
+  }
+}
+
+function fallbackWhatsAppShare() {
+  const text = encodeURIComponent('🎬 Mira este video: ' + currentVideoUrl);
+  window.open(`https://api.whatsapp.com/send?text=${text}`, '_blank');
+}
+
+// ============================
+// NATIVE SHARE (with image)
+// ============================
+function shareNative() {
+  playSound('click');
+  if (!currentThumbUrl) {
+    // No thumbnail yet, share just the URL
+    if (navigator.share) {
+      navigator.share({ title: 'Video en WAMS', text: 'Mira este video:', url: currentVideoUrl || location.href }).catch(() => {});
+    } else {
+      navigator.clipboard.writeText(currentVideoUrl).then(() => showToast('Enlace copiado'));
+    }
+    return;
+  }
+
+  // Share with image so Facebook/Instagram/WhatsApp pick it up correctly
+  if (navigator.share && navigator.canShare) {
+    fetch(currentThumbUrl)
+      .then(r => r.blob())
+      .then(blob => {
+        const file = new File([blob], 'miniatura_wams.jpg', { type: 'image/jpeg' });
+        const shareData = { files: [file], title: 'Mira este video', text: currentVideoUrl };
+        if (navigator.canShare(shareData)) {
+          navigator.share(shareData).catch(() => shareNativeFallback());
+        } else {
+          shareNativeFallback();
+        }
+      })
+      .catch(() => shareNativeFallback());
+  } else {
+    shareNativeFallback();
+  }
+}
+
+function shareNativeFallback() {
+  if (navigator.share) {
+    navigator.share({ title: 'Video en WAMS', text: 'Mira este video: ' + currentVideoUrl, url: currentVideoUrl }).catch(() => {});
+  } else {
+    navigator.clipboard.writeText(currentVideoUrl).then(() => showToast('Enlace copiado'));
+  }
+}
+
+// ============================
+// DOWNLOAD
+// ============================
+function downloadThumb() {
+  playSound('click');
+  if (!currentThumbUrl) return;
+  const a = document.createElement('a');
+  a.href = currentThumbUrl;
+  a.download = 'miniatura_wams_' + Date.now() + '.jpg';
+  a.target = '_blank';
+  a.click();
+  showToast('Descargando miniatura…');
+}
+
+// ============================
+// LIBRARY
+// ============================
+function addToLibrary(silent = false, tag = '') {
+  if (!silent) playSound('click');
+  if (!currentThumbUrl || !currentVideoUrl) {
+    if (!silent) showToast('Primero obtén una miniatura');
+    return;
+  }
+  const exists = db.library.find(i => i.url === currentVideoUrl && i.thumb === currentThumbUrl);
+  if (exists) { if (!silent) showToast('Ya está en la biblioteca'); return; }
+
+  db.library.unshift({
+    id: Date.now(),
+    url: currentVideoUrl,
+    thumb: currentThumbUrl,
+    cat: tag || selectedCat || '',
+    date: Date.now()
+  });
+  saveData();
+  if (!silent) showToast('✅ Guardado en biblioteca');
+}
+
+function renderLibrary() {
+  const grid = document.getElementById('libGrid');
+  const empty = document.getElementById('libEmpty');
+  const search = document.getElementById('libSearch').value.toLowerCase();
+  const catF = document.getElementById('catFilter').value;
+
+  // Update cat filter
+  const catSel = document.getElementById('catFilter');
+  const curVal = catSel.value;
+  catSel.innerHTML = '<option value="">Todas</option>';
+  db.categories.forEach(c => {
+    const o = document.createElement('option');
+    o.value = c; o.textContent = c;
+    catSel.appendChild(o);
+  });
+  catSel.value = curVal;
+
+  let items = db.library;
+  if (search) items = items.filter(i => i.url.toLowerCase().includes(search));
+  if (catF) items = items.filter(i => i.cat === catF);
+
+  if (!items.length) {
+    grid.innerHTML = '';
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+  grid.innerHTML = items.map(item => `
+    <div class="lib-item" onclick="loadFromLib('${item.id}')">
+      <img src="${item.thumb}" alt="thumb" onerror="this.src='data:image/svg+xml,<svg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'160\\' height=\\'90\\' fill=\\'%23333\\'><rect width=\\'100%\\' height=\\'100%\\'/><text x=\\'50%\\' y=\\'50%\\' fill=\\'%23666\\' text-anchor=\\'middle\\' dy=\\'.3em\\'>Sin imagen</text></svg>'">
+      <div class="lib-item-info">
+        <div class="lib-item-title">${new URL(item.url).hostname}</div>
+        ${item.cat ? `<div class="lib-item-cat">${item.cat}</div>` : ''}
+      </div>
+      <button class="lib-item-del" onclick="event.stopPropagation();deleteFromLib(${item.id})">✕</button>
+    </div>
+  `).join('');
+}
+
+function loadFromLib(id) {
+  playSound('click');
+  const item = db.library.find(i => i.id == id);
+  if (!item) return;
+  document.getElementById('urlInput').value = item.url;
+  currentVideoUrl = item.url;
+  currentThumbUrl = item.thumb;
+  showThumbnail(item.thumb, item.url);
+  showPanel('home');
+}
+
+function deleteFromLib(id) {
+  playSound('click');
+  db.library = db.library.filter(i => i.id != id);
+  saveData();
+  renderLibrary();
+  showToast('Eliminado de la biblioteca');
+}
+
+// ============================
+// CATEGORIES
+// ============================
+function openCatModal() {
+  playSound('click');
+  renderCatModal();
+  document.getElementById('catModal').classList.add('open');
+}
+
+function closeCatModal() {
+  document.getElementById('catModal').classList.remove('open');
+}
+
+function renderCatModal() {
+  const list = document.getElementById('catListModal');
+  list.innerHTML = db.categories.map(c => `
+    <div class="cat-chip ${selectedCat === c ? 'active' : ''}" onclick="selectCat('${c}')">${c}</div>
+  `).join('');
+}
+
+function selectCat(name) {
+  playSound('click');
+  selectedCat = name;
+  renderCatModal();
+}
+
+function saveToCat() {
+  playSound('click');
+  const newCat = document.getElementById('newCatInput').value.trim();
+  if (newCat && !db.categories.includes(newCat)) {
+    db.categories.push(newCat);
+    selectedCat = newCat;
+  }
+  // Update current item in library
+  if (currentVideoUrl) {
+    const item = db.library.find(i => i.url === currentVideoUrl);
+    if (item) {
+      item.cat = selectedCat;
+      saveData();
+    } else {
+      addToLibrary(true);
+      const item2 = db.library[0];
+      if (item2) item2.cat = selectedCat;
+      saveData();
+    }
+  }
+  saveData();
+  closeCatModal();
+  showToast(`Categoría: ${selectedCat}`);
+}
+
+// ============================
+// THEME
+// ============================
+function setTheme(name, el, silent = false) {
+  if (!silent) playSound('click');
+  const body = document.getElementById('appBody');
+  body.className = 'theme-' + name;
+  document.querySelectorAll('.theme-card').forEach(c => c.classList.remove('selected'));
+  const tc = document.querySelector(`[data-theme="${name}"]`);
+  if (tc) tc.classList.add('selected');
+  db.settings.theme = name;
+  if (!silent) saveData();
+
+  // Update meta theme-color
+  const colors = { tron: '#00f5ff', matrix: '#00ff41', gold: '#ffd700' };
+  document.getElementById('themeColorMeta').setAttribute('content', colors[name] || '#00f5ff');
+}
+
+// ============================
+// BUTTON CUSTOMIZATION
+// ============================
+function setBtnShape(r, el, silent = false) {
+  if (!silent) playSound('click');
+  document.documentElement.style.setProperty('--btn-shape', r + 'px');
+  document.querySelectorAll('.shape-opt').forEach(o => o.classList.remove('active'));
+  if (el) el.classList.add('active');
+  else {
+    const target = document.querySelector(`[data-r="${r}"]`);
+    if (target) target.classList.add('active');
+  }
+  db.settings.btnShape = r;
+  if (!silent) saveData();
+}
+
+function setBtnColor(color, el, silent = false) {
+  if (!silent) playSound('click');
+  document.documentElement.style.setProperty('--btn-color', color);
+  document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('active'));
+  if (el) el.classList.add('active');
+  db.settings.btnColor = color;
+  if (!silent) saveData();
+}
+
+// ============================
+// BG EFFECT
+// ============================
+function toggleBgEffect(on) {
+  db.settings.bgEffect = on;
+  saveData();
+  if (on && db.settings.theme === 'matrix') {
+    document.getElementById('appBody').classList.add('matrix-bg');
+    startMatrix();
+  } else {
+    document.getElementById('appBody').classList.remove('matrix-bg');
+  }
+}
+
+// Matrix rain
+function initMatrixCanvas() {
+  if (db.settings.bgEffect) {
+    document.getElementById('appBody').classList.add('matrix-bg');
+    startMatrix();
+  }
+}
+
+function startMatrix() {
+  const canvas = document.getElementById('matrixCanvas');
+  const ctx = canvas.getContext('2d');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  const cols = Math.floor(canvas.width / 16);
+  const drops = Array(cols).fill(1);
+  const chars = 'アイウエオカキクケコ0123456789ABCDEFGH';
+
+  function draw() {
+    ctx.fillStyle = 'rgba(0,8,0,0.05)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = '#00ff41';
+    ctx.font = '14px monospace';
+    drops.forEach((y, i) => {
+      ctx.fillText(chars[Math.floor(Math.random() * chars.length)], i * 16, y * 16);
+      if (y * 16 > canvas.height && Math.random() > 0.975) drops[i] = 0;
+      drops[i]++;
+    });
+  }
+  setInterval(draw, 50);
+}
+
+// ============================
+// DATA EXPORT / IMPORT
+// ============================
+function exportData() {
+  playSound('click');
+  const blob = new Blob([JSON.stringify(db, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'wams_backup_' + Date.now() + '.json';
+  a.click();
+  showToast('📦 Datos exportados');
+}
+
+function importData(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const imported = JSON.parse(e.target.result);
+      db = { ...db, ...imported };
+      saveData();
+      applyAllSettings();
+      showToast('✅ Datos importados');
+    } catch {
+      showToast('❌ Archivo inválido');
+    }
+  };
+  reader.readAsText(file);
+}
+
+function confirmClear() {
+  playSound('click');
+  document.getElementById('clearModal').classList.add('open');
+}
+
+function clearAll() {
+  playSound('click');
+  db.library = [];
+  db.categories = ['Música', 'Tutorial', 'Entretenimiento', 'Noticias', 'Deportes'];
+  saveData();
+  document.getElementById('clearModal').classList.remove('open');
+  showToast('🗑️ Datos eliminados');
+}
+
+// ============================
+// TOAST
+// ============================
+function showToast(msg) {
+  const tc = document.getElementById('toastContainer');
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.textContent = msg;
+  tc.appendChild(t);
+  setTimeout(() => t.remove(), 2700);
+}
+
+// ============================
+// INSTALL PWA
+// ============================
+function installApp() {
+  playSound('click');
+  if (deferredPrompt) {
+    deferredPrompt.prompt();
+    deferredPrompt.userChoice.then(r => {
+      if (r.outcome === 'accepted') showToast('✅ App instalada');
+      deferredPrompt = null;
+      document.getElementById('installBtn').style.display = 'none';
+      document.getElementById('installBanner').classList.remove('show');
+    });
+  } else {
+    showToast('Para iOS: Comparte → "Añadir a pantalla de inicio"');
+  }
+}
+
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredPrompt = e;
+  document.getElementById('installBtn').style.display = 'flex';
+  document.getElementById('installBanner').classList.add('show');
+});
+
+window.addEventListener('appinstalled', () => {
+  showToast('✅ WAMS instalada correctamente');
+});
+
+// ============================
+// SHARE TARGET (Web Share Target API)
+// ============================
+function checkSharedContent() {
+  const params = new URLSearchParams(location.search);
+  const shared = params.get('url') || params.get('text') || params.get('title');
+  if (shared) {
+    const urls = shared.match(/https?:\/\/[^\s]+/);
+    if (urls) {
+      document.getElementById('urlInput').value = urls[0];
+      setTimeout(fetchThumbnail, 500);
+    }
+  }
+  // Handle shared image file via Service Worker cache
+  const sharedImg = params.get('wams_shared_img');
+  if (sharedImg === '1') {
+    setTimeout(checkSharedImageCache, 600);
+  }
+}
+
+async function checkSharedImageCache() {
+  try {
+    const cache = await caches.open('wams-share-img');
+    const keys = await cache.keys();
+    if (keys.length) {
+      const resp = await cache.match(keys[0]);
+      const blob = await resp.blob();
+      await cache.delete(keys[0]);
+      loadImageIntoScreenshotTool(blob);
+    }
+  } catch(e) {}
+}
+
+// ============================
+// AI IMAGE GENERATION
+// ============================
+function saveAiSettings() {
+  db.settings.aiProvider = document.getElementById('aiProvider').value;
+  db.settings.aiApiKey = document.getElementById('aiApiKey').value;
+  db.settings.aiPromptTpl = document.getElementById('aiPromptTpl').value;
+  saveData();
+}
+
+function onAiProviderChange() {
+  const val = document.getElementById('aiProvider').value;
+  const [provider] = val.split('|');
+  const hint = document.getElementById('aiProviderHint');
+  const links = {
+    groq: '🔑 Obtén tu API Key gratis en <a href="https://console.groq.com/keys" target="_blank" style="color:var(--accent)">console.groq.com/keys</a>',
+    gemini: '🔑 Obtén tu API Key gratis en <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color:var(--accent)">aistudio.google.com</a>'
+  };
+  hint.innerHTML = links[provider] || '';
+  saveAiSettings();
+}
+
+function toggleApiKeyVisibility() {
+  const inp = document.getElementById('aiApiKey');
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+}
+
+async function testAiConnection() {
+  const key = document.getElementById('aiApiKey').value.trim();
+  const providerVal = document.getElementById('aiProvider').value;
+  const [provider, model] = providerVal.split('|');
+  if (!key) { showToast('⚠️ Introduce tu API Key primero'); return; }
+  showToast('⏳ Probando conexión…');
+  try {
+    let ok = false;
+    if (provider === 'groq') {
+      const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
+        body: JSON.stringify({ model, max_tokens: 5, messages: [{ role: 'user', content: 'Hi' }] })
+      });
+      ok = r.ok;
+    } else if (provider === 'gemini') {
+      const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contents: [{ parts: [{ text: 'Hi' }] }], generationConfig: { maxOutputTokens: 5 } })
+      });
+      ok = r.ok;
+    }
+    showToast(ok ? '✅ Conexión exitosa' : '❌ API Key inválida o error');
+  } catch(e) {
+    showToast('❌ Error de red: ' + e.message);
+  }
+}
+
+async function generateAIImage() {
+  playSound('click');
+  const key = (db.settings.aiApiKey || '').trim();
+  if (!key) {
+    showToast('⚠️ Configura tu API Key en Ajustes → IA');
+    showPanel('settings');
+    return;
+  }
+
+  const urlVal = (document.getElementById('urlInput').value || currentVideoUrl || '').trim();
+  // Extract YouTube title/description context from URL
+  let videoTitle = urlVal || 'video sin título';
+  let videoDesc = 'video de redes sociales';
+  const ytId = getYouTubeID(urlVal);
+  if (ytId) {
+    videoTitle = `video de YouTube (ID: ${ytId})`;
+    videoDesc = 'contenido de YouTube con miniatura llamativa';
+  }
+
+  let promptTpl = db.settings.aiPromptTpl || 'Genera una ilustración atractiva y llamativa que represente el tema del video titulado: "{Título del video}" con la descripción: "{Descripción del video}". La imagen debe ser estilo miniatura para compartir en redes sociales, con colores vivos y composición clara.';
+  const userPrompt = promptTpl
+    .replace(/\{Título del video\}/gi, videoTitle)
+    .replace(/\{Descripción del video\}/gi, videoDesc)
+    .replace(/\{url\}/gi, urlVal || 'un video');
+
+  await runAIGeneration(userPrompt, 'btnAIGenerate', '✨ Generar miniatura con IA');
+}
+
+function openPromptAI() {
+  playSound('click');
+  document.getElementById('promptAIModal').classList.add('open');
+}
+
+async function runPromptAI() {
+  const userText = document.getElementById('userPromptInput').value.trim();
+  if (!userText) { showToast('Escribe un prompt primero'); return; }
+  const key = (db.settings.aiApiKey || '').trim();
+  if (!key) {
+    document.getElementById('promptAIModal').classList.remove('open');
+    showToast('⚠️ Configura tu API Key en Ajustes → IA');
+    showPanel('settings');
+    return;
+  }
+  const fullPrompt = `Genera una ilustración estilo miniatura para compartir en redes sociales, que represente: "${userText}". Usa colores vivos y composición clara.`;
+  document.getElementById('promptAIModal').classList.remove('open');
+  await runAIGeneration(fullPrompt, 'btnPromptAI', '🖊️ Generar desde mi prompt');
+}
+
+async function runAIGeneration(userPrompt, btnId, btnOrigLabel) {
+  const key = (db.settings.aiApiKey || '').trim();
+  const providerVal = db.settings.aiProvider || 'groq|llama-3.3-70b-versatile';
+  const [provider, model] = providerVal.split('|');
+
+  const btn = document.getElementById(btnId);
+  if (btn) { btn.disabled = true; btn.innerHTML = '<span style="display:inline-block;animation:spin 1s linear infinite">⏳</span> Generando…'; }
+
+  try {
+    let imagePrompt = '';
+
+    const systemPrompt = 'You are a creative visual artist assistant. Generate a concise, detailed visual image prompt in English (max 120 words) for an AI image generator. Describe ONLY the visual elements: composition, colors, style, mood, lighting, subjects. CRITICAL: Do NOT include any text, letters, words, typography, signs, labels or watermarks in your description. NO explanations, NO preamble. Output ONLY the image prompt text.';
+
+    if (provider === 'groq') {
+      const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
+        body: JSON.stringify({
+          model, max_tokens: 200,
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: userPrompt }
+          ]
+        })
+      });
+      if (!res.ok) { const e = await res.json(); throw new Error(e.error?.message || `Groq error ${res.status}`); }
+      const data = await res.json();
+      imagePrompt = data.choices?.[0]?.message?.content?.trim() || '';
+    } else if (provider === 'gemini') {
+      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          system_instruction: { parts: [{ text: systemPrompt }] },
+          contents: [{ parts: [{ text: userPrompt }] }],
+          generationConfig: { maxOutputTokens: 200, temperature: 0.9 }
+        })
+      });
+      if (!res.ok) { const e = await res.json(); throw new Error(e.error?.message || `Gemini error ${res.status}`); }
+      const data = await res.json();
+      imagePrompt = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
+    }
+
+    if (!imagePrompt) throw new Error('Sin respuesta de la IA');
+
+    // No text in image — key fix for random letters problem
+    const suffix = ', NO text, NO letters, NO words, NO watermark, NO typography, purely visual illustration, social media thumbnail style, 16:9 aspect ratio, vibrant saturated colors, cinematic lighting, professional composition, sharp focus, high contrast, eye-catching';
+    const seed = Math.floor(Math.random() * 999999);
+    const imgUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(imagePrompt + suffix)}?width=1280&height=720&nologo=true&seed=${seed}&model=flux`;
+
+    showToast('🎨 Imagen generada · toca para editar');
+    showThumbnail(imgUrl, currentVideoUrl || location.href);
+
+  } catch(e) {
+    showToast('❌ Error IA: ' + e.message);
+  } finally {
+    if (btn) { btn.disabled = false; btn.innerHTML = btnOrigLabel; }
+  }
+}
+
+// ============================
+// THUMB EDITOR
+// ============================
+let editorLayers = [];       // { id, type:'text'|'sticker', x, y, scale, text, font, size, color, color2, gradient, style, emoji, el }
+let selectedLayerId = null;
+let editorBaseImage = null;  // HTMLImageElement
+
+const STICKERS = [
+  '🔥','⚡','💥','✨','🎯','🚀','💎','👑','🏆','⭐',
+  '❤️','💪','😱','🤯','😍','🎉','🎬','📢','💡','🌟'
+];
+
+const FONT_IMPORTS = [
+  'https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Permanent+Marker&family=Bangers&family=Oswald:wght@700&family=Pacifico&family=Righteous&family=Lobster&family=Fredoka+One&family=Anton&family=Russo+One&family=Creepster&family=Chewy&display=swap'
+];
+
+function loadEditorFonts() {
+  if (!document.getElementById('editorFontLink')) {
+    const link = document.createElement('link');
+    link.id = 'editorFontLink';
+    link.rel = 'stylesheet';
+    link.href = FONT_IMPORTS[0];
+    document.head.appendChild(link);
+  }
+}
+
+function openThumbEditor() {
+  playSound('click');
+  if (!currentThumbUrl) { showToast('Primero obtén o genera una miniatura'); return; }
+  loadEditorFonts();
+  editorLayers = [];
+  selectedLayerId = null;
+  document.getElementById('editorOverlay').innerHTML = '';
+  document.getElementById('layerControls').style.display = 'none';
+
+  const canvas = document.getElementById('editorCanvas');
+  const img = new Image();
+  img.crossOrigin = 'anonymous';
+  img.onload = () => {
+    editorBaseImage = img;
+    // Scale to fit max 640px wide
+    const maxW = Math.min(window.innerWidth - 16, 640);
+    const scale = maxW / img.naturalWidth;
+    canvas.width = img.naturalWidth;
+    canvas.height = img.naturalHeight;
+    canvas.style.width = Math.round(img.naturalWidth * scale) + 'px';
+    canvas.style.height = Math.round(img.naturalHeight * scale) + 'px';
+    redrawCanvas();
+    buildStickerGrid();
+    document.getElementById('thumbEditorModal').classList.add('open');
+  };
+  img.onerror = () => {
+    // Try with proxy for cross-origin images
+    const proxied = `https://corsproxy.io/?${encodeURIComponent(currentThumbUrl)}`;
+    img.src = proxied;
+  };
+  img.src = currentThumbUrl;
+}
+
+function closeThumbEditor() {
+  document.getElementById('thumbEditorModal').classList.remove('open');
+}
+
+function buildStickerGrid() {
+  const grid = document.getElementById('stickerGrid');
+  grid.innerHTML = STICKERS.map(s =>
+    `<button class="sticker-btn" onclick="addStickerLayer('${s}')">${s}</button>`
+  ).join('');
+}
+
+function switchEditorTab(tab) {
+  document.querySelectorAll('.editor-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  document.getElementById('editorPanelText').style.display = tab === 'text' ? 'block' : 'none';
+  document.getElementById('editorPanelSticker').style.display = tab === 'sticker' ? 'block' : 'none';
+}
+
+function redrawCanvas() {
+  const canvas = document.getElementById('editorCanvas');
+  const ctx = canvas.getContext('2d');
+  if (editorBaseImage) ctx.drawImage(editorBaseImage, 0, 0, canvas.width, canvas.height);
+}
+
+function makeLayerId() { return 'layer_' + Date.now() + '_' + Math.random().toString(36).slice(2); }
+
+function addTextLayer() {
+  const text = document.getElementById('editorTextInput').value.trim();
+  if (!text) { showToast('Escribe algo primero'); return; }
+  const canvas = document.getElementById('editorCanvas');
+  const id = makeLayerId();
+  const layer = {
+    id, type: 'text', text,
+    x: canvas.width / 2, y: canvas.height / 2,
+    scale: 1, rotation: 0,
+    font: document.getElementById('editorFont').value,
+    size: parseInt(document.getElementById('editorFontSize').value),
+    color: currentTextColor || '#ffffff',
+    color2: document.getElementById('textGradientColor2').value,
+    gradient: document.getElementById('textGradient').checked,
+    style: currentTextStyle || 'shadow'
+  };
+  editorLayers.push(layer);
+  renderLayer(layer);
+  selectLayer(id);
+  document.getElementById('editorTextInput').value = '';
+}
+
+function addStickerLayer(emoji) {
+  const canvas = document.getElementById('editorCanvas');
+  const id = makeLayerId();
+  const layer = {
+    id, type: 'sticker', emoji,
+    x: canvas.width / 2 + (Math.random() - 0.5) * 200,
+    y: canvas.height / 2 + (Math.random() - 0.5) * 100,
+    scale: 1, rotation: 0, size: 80
+  };
+  editorLayers.push(layer);
+  renderLayer(layer);
+  selectLayer(id);
+}
+
+function renderLayer(layer) {
+  const overlay = document.getElementById('editorOverlay');
+  const canvas = document.getElementById('editorCanvas');
+  const scaleX = parseFloat(canvas.style.width) / canvas.width;
+
+  const el = document.createElement('div');
+  el.className = 'editor-layer';
+  el.dataset.id = layer.id;
+
+  if (layer.type === 'text') {
+    el.textContent = layer.text;
+    applyLayerStyles(el, layer, scaleX);
+  } else {
+    el.textContent = layer.emoji;
+    el.style.fontSize = (layer.size * scaleX) + 'px';
+    el.style.lineHeight = '1';
+  }
+
+  el.style.left = (layer.x * scaleX) + 'px';
+  el.style.top = (layer.y * scaleX) + 'px';
+  el.style.transform = `translate(-50%,-50%) scale(${layer.scale}) rotate(${layer.rotation || 0}deg)`;
+  el.style.pointerEvents = 'auto';
+
+  setupLayerInteraction(el, layer);
+  overlay.appendChild(el);
+  layer.el = el;
+}
+
+function applyLayerStyles(el, layer, scaleX) {
+  const px = (layer.size * scaleX) + 'px';
+  el.style.fontSize = px;
+  el.style.fontFamily = layer.font;
+  el.style.fontWeight = '900';
+
+  const styleMap = {
+    cta: `color:${layer.color};text-shadow:0 0 0 transparent;-webkit-text-stroke:2px #000;background:#ff0000;padding:4px 12px;border-radius:4px`,
+    neon: `color:${layer.color};text-shadow:0 0 8px ${layer.color},0 0 20px ${layer.color},0 0 40px ${layer.color}`,
+    shadow: `color:${layer.color};text-shadow:3px 3px 0 #000,4px 4px 8px rgba(0,0,0,0.8)`,
+    outline: `color:transparent;-webkit-text-stroke:2px ${layer.color};text-shadow:none`,
+    fire: `color:${layer.color};text-shadow:0 -2px 6px #ff0,0 -4px 12px #ff0,0 -8px 20px #ff8800,0 -12px 30px #ff4400`
+  };
+  const styleStr = styleMap[layer.style] || styleMap.shadow;
+  styleStr.split(';').forEach(s => {
+    const [k, ...v] = s.split(':');
+    if (k && v.length) el.style[k.trim().replace(/-([a-z])/g, (_,c) => c.toUpperCase())] = v.join(':').trim();
+  });
+
+  if (layer.gradient) {
+    el.style.backgroundImage = `linear-gradient(90deg, ${layer.color}, ${layer.color2})`;
+    el.style.webkitBackgroundClip = 'text';
+    el.style.webkitTextFillColor = 'transparent';
+    el.style.backgroundClip = 'text';
+  } else {
+    el.style.backgroundImage = '';
+    el.style.webkitBackgroundClip = '';
+    el.style.webkitTextFillColor = '';
+    el.style.backgroundClip = '';
+  }
+}
+
+function setupLayerInteraction(el, layer) {
+  let dragging = false, startX, startY, startLX, startLY;
+  let pinchStartDist = 0, pinchStartScale = 1;
+
+  // Mouse drag
+  el.addEventListener('mousedown', e => {
+    e.stopPropagation();
+    selectLayer(layer.id);
+    dragging = true;
+    startX = e.clientX; startY = e.clientY;
+    startLX = layer.x; startLY = layer.y;
+    const onMove = ev => {
+      if (!dragging) return;
+      const canvas = document.getElementById('editorCanvas');
+      const scaleX = parseFloat(canvas.style.width) / canvas.width;
+      layer.x = startLX + (ev.clientX - startX) / scaleX;
+      layer.y = startLY + (ev.clientY - startY) / scaleX;
+      updateLayerPosition(layer);
+    };
+    const onUp = () => { dragging = false; document.removeEventListener('mousemove', onMove); document.removeEventListener('mouseup', onUp); };
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+  });
+
+  // Touch drag + pinch
+  el.addEventListener('touchstart', e => {
+    e.stopPropagation();
+    selectLayer(layer.id);
+    if (e.touches.length === 1) {
+      startX = e.touches[0].clientX; startY = e.touches[0].clientY;
+      startLX = layer.x; startLY = layer.y;
+    } else if (e.touches.length === 2) {
+      const dx = e.touches[0].clientX - e.touches[1].clientX;
+      const dy = e.touches[0].clientY - e.touches[1].clientY;
+      pinchStartDist = Math.hypot(dx, dy);
+      pinchStartScale = layer.scale;
+    }
+  }, { passive: true });
+
+  el.addEventListener('touchmove', e => {
+    e.stopPropagation();
+    const canvas = document.getElementById('editorCanvas');
+    const scaleX = parseFloat(canvas.style.width) / canvas.width;
+    if (e.touches.length === 1) {
+      layer.x = startLX + (e.touches[0].clientX - startX) / scaleX;
+      layer.y = startLY + (e.touches[0].clientY - startY) / scaleX;
+      updateLayerPosition(layer);
+    } else if (e.touches.length === 2) {
+      const dx = e.touches[0].clientX - e.touches[1].clientX;
+      const dy = e.touches[0].clientY - e.touches[1].clientY;
+      const dist = Math.hypot(dx, dy);
+      layer.scale = Math.max(0.2, Math.min(5, pinchStartScale * (dist / pinchStartDist)));
+      updateLayerPosition(layer);
+    }
+  }, { passive: true });
+
+  el.addEventListener('click', e => { e.stopPropagation(); selectLayer(layer.id); });
+}
+
+function updateLayerPosition(layer) {
+  if (!layer.el) return;
+  const canvas = document.getElementById('editorCanvas');
+  const scaleX = parseFloat(canvas.style.width) / canvas.width;
+  layer.el.style.left = (layer.x * scaleX) + 'px';
+  layer.el.style.top = (layer.y * scaleX) + 'px';
+  layer.el.style.transform = `translate(-50%,-50%) scale(${layer.scale}) rotate(${layer.rotation || 0}deg)`;
+}
+
+function selectLayer(id) {
+  selectedLayerId = id;
+  document.querySelectorAll('.editor-layer').forEach(el => el.classList.remove('selected'));
+  const layer = editorLayers.find(l => l.id === id);
+  if (layer?.el) {
+    layer.el.classList.add('selected');
+    document.getElementById('layerControls').style.display = 'block';
+    if (layer.type === 'text') {
+      document.getElementById('editorFont').value = layer.font;
+      document.getElementById('editorFontSize').value = layer.size;
+      document.getElementById('editorFontSizeVal').textContent = layer.size;
+    }
+  }
+}
+
+function updateSelectedLayer() {
+  const layer = editorLayers.find(l => l.id === selectedLayerId);
+  if (!layer || layer.type !== 'text') return;
+  const canvas = document.getElementById('editorCanvas');
+  const scaleX = parseFloat(canvas.style.width) / canvas.width;
+  layer.font = document.getElementById('editorFont').value;
+  layer.size = parseInt(document.getElementById('editorFontSize').value);
+  layer.gradient = document.getElementById('textGradient').checked;
+  layer.color2 = document.getElementById('textGradientColor2').value;
+  document.getElementById('editorFontSizeVal').textContent = layer.size;
+  applyLayerStyles(layer.el, layer, scaleX);
+}
+
+let currentTextColor = '#ffffff';
+let currentTextStyle = 'shadow';
+
+function setTextColor(color, el) {
+  currentTextColor = color;
+  document.querySelectorAll('#editorPanelText .color-dot').forEach(d => d.classList.remove('active'));
+  if (el) el.classList.add('active');
+  const layer = editorLayers.find(l => l.id === selectedLayerId);
+  if (layer) { layer.color = color; const canvas = document.getElementById('editorCanvas'); applyLayerStyles(layer.el, layer, parseFloat(canvas.style.width)/canvas.width); }
+}
+
+function applyTextStyle(style) {
+  currentTextStyle = style;
+  document.querySelectorAll('.style-preset').forEach(b => b.classList.remove('active'));
+  document.querySelector(`[data-style="${style}"]`)?.classList.add('active');
+  const layer = editorLayers.find(l => l.id === selectedLayerId);
+  if (layer) {
+    layer.style = style;
+    const canvas = document.getElementById('editorCanvas');
+    applyLayerStyles(layer.el, layer, parseFloat(canvas.style.width)/canvas.width);
+  }
+}
+
+function deleteSelectedLayer() {
+  if (!selectedLayerId) return;
+  const layer = editorLayers.find(l => l.id === selectedLayerId);
+  if (layer?.el) layer.el.remove();
+  editorLayers = editorLayers.filter(l => l.id !== selectedLayerId);
+  selectedLayerId = null;
+  document.getElementById('layerControls').style.display = 'none';
+}
+
+function duplicateSelectedLayer() {
+  const orig = editorLayers.find(l => l.id === selectedLayerId);
+  if (!orig) return;
+  const newLayer = { ...orig, id: makeLayerId(), x: orig.x + 20, y: orig.y + 20, el: null };
+  editorLayers.push(newLayer);
+  renderLayer(newLayer);
+  selectLayer(newLayer.id);
+}
+
+async function exportEditorImage() {
+  playSound('click');
+  const canvas = document.getElementById('editorCanvas');
+  const ctx = canvas.getContext('2d');
+
+  // Draw base
+  if (editorBaseImage) ctx.drawImage(editorBaseImage, 0, 0, canvas.width, canvas.height);
+
+  // Draw each layer onto canvas at full resolution
+  const displayScale = parseFloat(canvas.style.width) / canvas.width;
+
+  for (const layer of editorLayers) {
+    ctx.save();
+    const cx = layer.x, cy = layer.y;
+    ctx.translate(cx, cy);
+    ctx.scale(layer.scale, layer.scale);
+
+    if (layer.type === 'sticker') {
+      ctx.font = `${layer.size}px serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(layer.emoji, 0, 0);
+    } else {
+      const fontSize = layer.size;
+      ctx.font = `900 ${fontSize}px ${layer.font}`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+
+      if (layer.gradient) {
+        const grad = ctx.createLinearGradient(-150, 0, 150, 0);
+        grad.addColorStop(0, layer.color);
+        grad.addColorStop(1, layer.color2);
+        ctx.fillStyle = grad;
+      } else {
+        ctx.fillStyle = layer.color;
+      }
+
+      if (layer.style === 'shadow') {
+        ctx.shadowColor = '#000'; ctx.shadowBlur = 8; ctx.shadowOffsetX = 3; ctx.shadowOffsetY = 3;
+      } else if (layer.style === 'neon') {
+        ctx.shadowColor = layer.color; ctx.shadowBlur = 20;
+      } else if (layer.style === 'cta') {
+        ctx.fillStyle = '#ff0000';
+        ctx.fillRect(-canvas.width * 0.25, -fontSize * 0.6, canvas.width * 0.5, fontSize * 1.2);
+        ctx.fillStyle = layer.color;
+        ctx.strokeStyle = '#000'; ctx.lineWidth = 2; ctx.strokeText(layer.text, 0, 0);
+      } else if (layer.style === 'outline') {
+        ctx.strokeStyle = layer.color; ctx.lineWidth = 3;
+        ctx.strokeText(layer.text, 0, 0); ctx.restore(); ctx.save(); continue;
+      } else if (layer.style === 'fire') {
+        ctx.shadowColor = '#ff8800'; ctx.shadowBlur = 20;
+      }
+
+      if (layer.style !== 'outline') {
+        if (layer.style !== 'cta') ctx.fillText(layer.text, 0, 0);
+        else ctx.fillText(layer.text, 0, 0);
+      }
+    }
+    ctx.restore();
+  }
+
+  // Export as blob, update current thumbnail
+  canvas.toBlob(blob => {
+    const url = URL.createObjectURL(blob);
+    currentThumbUrl = url;
+    document.getElementById('thumbImg').src = url;
+    closeThumbEditor();
+    showToast('✅ Miniatura editada guardada');
+  }, 'image/jpeg', 0.95);
+}
+
+// Click outside layers deselects
+function initEditorClickOutside() {
+  document.getElementById('editorCanvasWrap')?.addEventListener('click', () => {
+    selectedLayerId = null;
+    document.querySelectorAll('.editor-layer').forEach(el => el.classList.remove('selected'));
+    document.getElementById('layerControls').style.display = 'none';
+  });
+}
+
+// ============================
+// i18n — TRANSLATIONS
+// ============================
+const I18N = {
+  es: {
+    home_title:'Obtener miniatura', url_placeholder:'YouTube, Vimeo, TikTok, Reddit, Pinterest, Twitch…',
+    btn_paste:'Pegar desde portapapeles', btn_ai_generate:'✨ Generar miniatura con IA',
+    btn_prompt_ai:'🖊️ Generar desde mi prompt', btn_original_ai:'🔍 Obtener imagen original con IA',
+    result_title:'Resultado', btn_wa_status:'Estado WhatsApp', btn_share:'Compartir',
+    btn_download:'Descargar', btn_library:'Biblioteca', btn_category:'Categoría',
+    btn_editor:'✏️ Añadir texto y stickers',
+    btn_screenshot:'📸 Capturar pantalla', btn_upload_img:'🖼️ Subir imagen / captura de pantalla',
+    nav_home:'INICIO', nav_library:'BIBLIOTECA', nav_settings:'AJUSTES',
+    settings_lang:'🌐 Idioma / Language', settings_manual:'📖 Manual de uso',
+    manual_s1_title:'🏠 INICIO — Obtener miniaturas',
+    manual_s1_body:'Pega la URL de un video de YouTube, Facebook, Instagram, TikTok, Vimeo o Twitter/X en el campo de texto y pulsa la lupa. Usa <b>Pegar desde portapapeles</b> para pegar automáticamente. Una vez obtenida la miniatura puedes compartirla en WhatsApp, descargarla o guardarla en la biblioteca.<br><br><b>💡 Truco para Instagram y Facebook:</b> el botón <b>🖼️ Subir imagen</b> es la opción más recomendada. Haz un pantallazo del contenido, pulsa ese botón, selecciona tu captura desde la galería y se abrirá el editor de recorte. Recorta bordes, ajusta la proporción y añade texto o stickers antes de compartir.',
+    manual_s2_title:'✨ IA — Generar miniatura',
+    manual_s2_body:'<b>Generar miniatura con IA:</b> usa el título y descripción del video para crear una ilustración personalizada. Requiere API Key de Groq o Gemini (configúrala en Ajustes → IA).<br><b>Generar desde mi prompt:</b> escribe una descripción libre y la IA genera la imagen.<br><b>Obtener imagen original con IA:</b> analiza la URL, extrae el og:image si existe o genera una ilustración representativa del contenido.',
+    manual_s3_title:'✏️ Editor de miniaturas',
+    manual_s3_body:'Pulsa <b>Añadir texto y stickers</b> en el resultado para abrir el editor. Puedes añadir texto con 15 fuentes y 5 estilos, elegir color o gradiente, ajustar tamaño, mover con arrastre o pellizco, añadir stickers y exportar.<br><br><b>Flujo recomendado para Instagram/Facebook:</b> pulsa <b>🖼️ Subir imagen</b> → selecciona tu captura → recórtala → pulsa "Recortar y usar" → pulsa "Añadir texto y stickers" → comparte.',
+    manual_s4_title:'📚 Biblioteca',
+    manual_s4_body:'Guarda miniaturas con el botón <b>Biblioteca</b>. Asigna categorías para organizarlas. Usa el buscador para filtrar. Desde cada tarjeta puedes compartir, descargar o eliminar.',
+    manual_s5_title:'⚙️ Ajustes',
+    manual_s5_body:'<b>Tema visual:</b> TRON (cian), MATRIX (verde), GOLD (dorado).<br><b>Personalizar botones:</b> forma (esquinas) y color primario.<br><b>Preferencias:</b> sonido, efecto fondo, brillo, calidad miniatura, auto-pegar, historial, auto-guardar, abrir video al tocar.<br><b>IA:</b> configura tu proveedor (Groq/Gemini), modelo y API Key. Personaliza el prompt plantilla.<br><b>Datos:</b> exporta/importa tu biblioteca en JSON.<br><b>Idioma:</b> cambia el idioma de toda la interfaz.',
+    manual_s6_title:'📲 Instalar como app',
+    manual_s6_body:'WAMS es una PWA. En Chrome/Edge pulsa el botón 📲 en la cabecera o el banner de instalación para instalarla en tu dispositivo como app nativa.',
+  },
+  en: {
+    home_title:'Get thumbnail', url_placeholder:'YouTube, Vimeo, TikTok, Reddit, Pinterest, Twitch…',
+    btn_paste:'Paste from clipboard', btn_ai_generate:'✨ Generate thumbnail with AI',
+    btn_prompt_ai:'🖊️ Generate from my prompt', btn_original_ai:'🔍 Get original image with AI',
+    result_title:'Result', btn_wa_status:'WhatsApp Status', btn_share:'Share',
+    btn_download:'Download', btn_library:'Library', btn_category:'Category',
+    btn_editor:'✏️ Add text & stickers',
+    btn_screenshot:'📸 Capture screen', btn_upload_img:'🖼️ Upload image / screenshot',
+    nav_home:'HOME', nav_library:'LIBRARY', nav_settings:'SETTINGS',
+    settings_lang:'🌐 Language', settings_manual:'📖 User guide',
+    manual_s1_title:'🏠 HOME — Get thumbnails',
+    manual_s1_body:'Paste the URL of a YouTube, Facebook, Instagram, TikTok, Vimeo or Twitter/X video and tap the search icon. Use <b>Paste from clipboard</b> to paste automatically. Once the thumbnail is obtained, share it on WhatsApp, download it or save it to the library.<br><br><b>💡 Tip for Instagram & Facebook:</b> the <b>🖼️ Upload image</b> button is the most recommended option for these platforms. Take a screenshot of the content, tap that button, pick your screenshot from the gallery and the smart crop editor will open. Trim borders, adjust ratio, then add text or stickers before sharing.',
+    manual_s2_title:'✨ AI — Generate thumbnail',
+    manual_s2_body:'<b>Generate thumbnail with AI:</b> uses the video title and description to create a custom illustration. Requires a Groq or Gemini API Key (configure it in Settings → AI).<br><b>Generate from my prompt:</b> write a free description and the AI generates the image.<br><b>Get original image with AI:</b> analyses the URL, extracts the og:image if it exists or generates an illustrative image.',
+    manual_s3_title:'✏️ Thumbnail editor',
+    manual_s3_body:'Tap <b>Add text & stickers</b> on the result to open the editor. Add text with 15 fonts and 5 styles, choose colour or gradient, adjust size, move by drag or pinch to scale, add emoji stickers and export.<br><br><b>Recommended flow for Instagram/Facebook:</b> tap <b>🖼️ Upload image</b> → pick your screenshot → crop it → tap "Crop & use" → tap "Add text & stickers" → share.',
+    manual_s4_title:'📚 Library',
+    manual_s4_body:'Save thumbnails with the <b>Library</b> button. Assign categories to organise them. Use the search bar to filter. From each card you can share, download or delete.',
+    manual_s5_title:'⚙️ Settings',
+    manual_s5_body:'<b>Visual theme:</b> TRON (cyan), MATRIX (green), GOLD (gold).<br><b>Customise buttons:</b> shape (corners) and primary colour.<br><b>Preferences:</b> sound, background effect, glow, thumbnail quality, auto-paste, history, auto-save, open video on tap.<br><b>AI:</b> set your provider (Groq/Gemini), model and API Key. Customise the prompt template.<br><b>Data:</b> export/import your library as JSON.<br><b>Language:</b> change the interface language.',
+    manual_s6_title:'📲 Install as app',
+    manual_s6_body:'WAMS is a PWA. In Chrome/Edge tap the 📲 button in the header or the install banner to install it on your device as a native app.',
+  },
+  zh: {
+    home_title:'獲取縮圖', url_placeholder:'貼上 YouTube 或 Facebook 網址…',
+    btn_paste:'從剪貼簿貼上', btn_ai_generate:'✨ 用 AI 生成縮圖',
+    btn_prompt_ai:'🖊️ 從我的提示生成', btn_original_ai:'🔍 用 AI 獲取原始圖片',
+    result_title:'結果', btn_wa_status:'WhatsApp 狀態', btn_share:'分享',
+    btn_download:'下載', btn_library:'圖書館', btn_category:'分類',
+    btn_editor:'✏️ 添加文字和貼圖',
+    btn_screenshot:'📸 截圖', btn_upload_img:'🖼️ 上傳圖片 / 截圖', nav_library:'圖書館', nav_settings:'設定',
+    settings_lang:'🌐 語言', settings_manual:'📖 使用手冊',
+    manual_s1_title:'🏠 首頁 — 獲取縮圖',
+    manual_s1_body:'將 YouTube、Facebook、Instagram、TikTok、Vimeo 或 Twitter/X 影片網址貼到文字欄位並點擊搜尋。使用<b>從剪貼簿貼上</b>自動貼上。獲取縮圖後，您可以在 WhatsApp 上分享、下載或儲存到圖書館。<br><br><b>💡 Instagram/Facebook 技巧：</b>最推薦使用<b>🖼️ 上傳圖片</b>按鈕。截圖後點擊該按鈕，從相冊選擇截圖，裁剪工具會自動開啟。修剪邊框、調整比例，再添加文字或貼圖後分享。',
+    manual_s2_title:'✨ AI — 生成縮圖',
+    manual_s2_body:'<b>用 AI 生成縮圖：</b>使用影片標題和描述創建自訂插圖。需要 Groq 或 Gemini API Key（在設定 → AI 中配置）。<br><b>從我的提示生成：</b>自由描述，AI 生成圖片。<br><b>用 AI 獲取原始圖片：</b>分析網址，提取 og:image（如存在）或生成代表性插圖。',
+    manual_s3_title:'✏️ 縮圖編輯器',
+    manual_s3_body:'點擊結果中的<b>添加文字和貼圖</b>以打開編輯器。添加文字（15 種字體、5 種樣式）、選色或漸變、調整大小、拖動或捏合縮放、添加表情貼圖並匯出。<br><br><b>Instagram/Facebook 推薦流程：</b>點擊<b>🖼️ 上傳圖片</b> → 選截圖 → 裁剪 → 「裁剪並使用」 → 「添加文字和貼圖」 → 分享。',
+    manual_s4_title:'📚 圖書館',
+    manual_s4_body:'使用<b>圖書館</b>按鈕儲存縮圖。分配分類以整理。使用搜尋欄過濾。從每張卡片可以分享、下載或刪除。',
+    manual_s5_title:'⚙️ 設定',
+    manual_s5_body:'<b>視覺主題：</b>TRON（青色）、MATRIX（綠色）、GOLD（金色）。<br><b>自訂按鈕：</b>形狀和主要顏色。<br><b>偏好設定：</b>聲音、背景效果、光暈、縮圖品質、自動貼上、歷史記錄、自動儲存、點擊開啟影片。<br><b>AI：</b>配置提供商、模型和 API Key。<br><b>語言：</b>更改介面語言。',
+    manual_s6_title:'📲 安裝為應用程式',
+    manual_s6_body:'WAMS 是 PWA。在 Chrome/Edge 中點擊標題中的 📲 按鈕或安裝橫幅，將其作為原生應用程式安裝到您的裝置。',
+  },
+  hi: {
+    home_title:'थंबनेल प्राप्त करें', url_placeholder:'YouTube या Facebook URL पेस्ट करें…',
+    btn_paste:'क्लिपबोर्ड से पेस्ट करें', btn_ai_generate:'✨ AI से थंबनेल बनाएं',
+    btn_prompt_ai:'🖊️ मेरे प्रॉम्प्ट से बनाएं', btn_original_ai:'🔍 AI से मूल छवि प्राप्त करें',
+    result_title:'परिणाम', btn_wa_status:'WhatsApp स्टेटस', btn_share:'शेयर करें',
+    btn_download:'डाउनलोड', btn_library:'लाइब्रेरी', btn_category:'श्रेणी',
+    btn_editor:'✏️ टेक्स्ट और स्टिकर जोड़ें',
+    btn_screenshot:'📸 स्क्रीन कैप्चर', btn_upload_img:'🖼️ छवि / स्क्रीनशॉट अपलोड करें', nav_library:'लाइब्रेरी', nav_settings:'सेटिंग्स',
+    settings_lang:'🌐 भाषा', settings_manual:'📖 उपयोग मैनुअल',
+    manual_s1_title:'🏠 होम — थंबनेल प्राप्त करें',
+    manual_s1_body:'YouTube, Facebook, Instagram, TikTok, Vimeo या Twitter/X वीडियो का URL पेस्ट करें और सर्च आइकन दबाएं। <b>क्लिपबोर्ड से पेस्ट करें</b> का उपयोग करें। थंबनेल मिलने के बाद शेयर करें, डाउनलोड करें या लाइब्रेरी में सहेजें।<br><br><b>💡 Instagram/Facebook टिप:</b> <b>🖼️ छवि अपलोड करें</b> बटन इन नेटवर्क के लिए सबसे अनुशंसित विकल्प है। स्क्रीनशॉट लें, बटन दबाएं, गैलरी से चुनें, क्रॉप करें, टेक्स्ट और स्टिकर जोड़ें फिर शेयर करें।',
+    manual_s2_title:'✨ AI — थंबनेल बनाएं',
+    manual_s2_body:'<b>AI से थंबनेल बनाएं:</b> कस्टम चित्र बनाने के लिए वीडियो शीर्षक और विवरण का उपयोग करता है। Groq या Gemini API Key आवश्यक है।<br><b>मेरे प्रॉम्प्ट से बनाएं:</b> स्वतंत्र विवरण लिखें और AI छवि बनाता है।<br><b>AI से मूल छवि:</b> URL का विश्लेषण करता है, og:image निकालता है या प्रतिनिधि चित्र बनाता है।',
+    manual_s3_title:'✏️ थंबनेल संपादक',
+    manual_s3_body:'परिणाम में <b>टेक्स्ट और स्टिकर जोड़ें</b> दबाएं। 15 फ़ॉन्ट और 5 स्टाइल, रंग या ग्रेडिएंट, आकार समायोजित करें, खींचें या पिंच करें।<br><br><b>Instagram/Facebook के लिए प्रवाह:</b> <b>🖼️ छवि अपलोड करें</b> → स्क्रीनशॉट चुनें → काटें → "काटें और उपयोग करें" → "टेक्स्ट जोड़ें" → शेयर करें।',
+    manual_s4_title:'📚 लाइब्रेरी', manual_s4_body:'<b>लाइब्रेरी</b> बटन से थंबनेल सहेजें। श्रेणियां असाइन करें। खोज बार से फ़िल्टर करें।',
+    manual_s5_title:'⚙️ सेटिंग्स', manual_s5_body:'थीम, बटन, प्राथमिकताएं, AI कॉन्फ़िगरेशन और डेटा प्रबंधन।',
+    manual_s6_title:'📲 ऐप के रूप में इंस्टॉल करें', manual_s6_body:'WAMS एक PWA है। Chrome/Edge में 📲 बटन दबाकर अपने डिवाइस पर इंस्टॉल करें।',
+  },
+  id: {
+    home_title:'Dapatkan thumbnail', url_placeholder:'Tempel URL YouTube atau Facebook…',
+    btn_paste:'Tempel dari clipboard', btn_ai_generate:'✨ Buat thumbnail dengan AI',
+    btn_prompt_ai:'🖊️ Buat dari prompt saya', btn_original_ai:'🔍 Dapatkan gambar asli dengan AI',
+    result_title:'Hasil', btn_wa_status:'Status WhatsApp', btn_share:'Bagikan',
+    btn_download:'Unduh', btn_library:'Perpustakaan', btn_category:'Kategori',
+    btn_editor:'✏️ Tambah teks & stiker',
+    btn_screenshot:'📸 Tangkap layar', btn_upload_img:'🖼️ Unggah gambar / tangkapan layar', nav_library:'PERPUSTAKAAN', nav_settings:'PENGATURAN',
+    settings_lang:'🌐 Bahasa', settings_manual:'📖 Panduan penggunaan',
+    manual_s1_title:'🏠 BERANDA — Dapatkan thumbnail',
+    manual_s1_body:'Tempel URL video YouTube, Facebook, Instagram, TikTok, Vimeo atau Twitter/X dan ketuk ikon pencarian. Gunakan <b>Tempel dari clipboard</b> untuk menempel otomatis. Bagikan, unduh, atau simpan ke perpustakaan.<br><br><b>💡 Tips Instagram/Facebook:</b> tombol <b>🖼️ Unggah gambar</b> adalah pilihan paling disarankan. Ambil tangkapan layar konten, ketuk tombol itu, pilih dari galeri, editor potong akan terbuka. Potong tepi, sesuaikan rasio, tambah teks atau stiker lalu bagikan.',
+    manual_s2_title:'✨ AI — Buat thumbnail',
+    manual_s2_body:'<b>Buat thumbnail dengan AI:</b> menggunakan judul dan deskripsi video untuk membuat ilustrasi kustom. Memerlukan API Key Groq atau Gemini.<br><b>Buat dari prompt saya:</b> tulis deskripsi bebas dan AI menghasilkan gambar.<br><b>Dapatkan gambar asli:</b> menganalisis URL, mengekstrak og:image jika ada atau membuat ilustrasi representatif.',
+    manual_s3_title:'✏️ Editor thumbnail',
+    manual_s3_body:'Ketuk <b>Tambah teks & stiker</b> untuk membuka editor. Tambah teks (15 font, 5 gaya), pilih warna/gradien, sesuaikan ukuran, seret atau cubit untuk skala.<br><br><b>Alur untuk Instagram/Facebook:</b> <b>🖼️ Unggah gambar</b> → pilih tangkapan layar → potong → "Potong & gunakan" → "Tambah teks & stiker" → bagikan.',
+    manual_s4_title:'📚 Perpustakaan', manual_s4_body:'Simpan thumbnail dengan tombol <b>Perpustakaan</b>. Tetapkan kategori. Gunakan bilah pencarian untuk memfilter.',
+    manual_s5_title:'⚙️ Pengaturan', manual_s5_body:'Tema visual, kustomisasi tombol, preferensi, konfigurasi AI, dan manajemen data.',
+    manual_s6_title:'📲 Instal sebagai aplikasi', manual_s6_body:'WAMS adalah PWA. Di Chrome/Edge ketuk tombol 📲 di header atau banner instalasi.',
+  },
+  tl: {
+    home_title:'Kumuha ng thumbnail', url_placeholder:'I-paste ang URL ng YouTube o Facebook…',
+    btn_paste:'I-paste mula sa clipboard', btn_ai_generate:'✨ Gumawa ng thumbnail gamit ang AI',
+    btn_prompt_ai:'🖊️ Gumawa mula sa aking prompt', btn_original_ai:'🔍 Kumuha ng orihinal na larawan gamit ang AI',
+    result_title:'Resulta', btn_wa_status:'WhatsApp Status', btn_share:'Ibahagi',
+    btn_download:'I-download', btn_library:'Aklatan', btn_category:'Kategorya',
+    btn_editor:'✏️ Magdagdag ng teksto at sticker',
+    btn_screenshot:'📸 Kumuha ng screenshot', btn_upload_img:'🖼️ Mag-upload ng larawan / screenshot', nav_library:'AKLATAN', nav_settings:'MGA SETTING',
+    settings_lang:'🌐 Wika', settings_manual:'📖 Gabay sa paggamit',
+    manual_s1_title:'🏠 TAHANAN — Kumuha ng thumbnail',
+    manual_s1_body:'I-paste ang URL ng video mula sa YouTube, Facebook, Instagram, TikTok, Vimeo o Twitter/X at i-tap ang icon ng paghahanap. Gamitin ang <b>I-paste mula sa clipboard</b> para sa awtomatikong pag-paste.<br><br><b>💡 Tip para sa Instagram/Facebook:</b> ang <b>🖼️ Mag-upload ng larawan</b> na pindutan ang pinaka-inirerekomenda para sa mga network na ito. Kumuha ng screenshot, pindutin ang pindutan, piliin mula sa gallery, at awtomatikong magbubukas ang editor ng pagputol. Putulin ang mga gilid, ayusin ang ratio, dagdagan ng teksto o sticker bago ibahagi.',
+    manual_s2_title:'✨ AI — Gumawa ng thumbnail',
+    manual_s2_body:'<b>Gumawa ng thumbnail gamit ang AI:</b> gumagamit ng pamagat at paglalarawan ng video. Nangangailangan ng API Key ng Groq o Gemini.<br><b>Gumawa mula sa prompt:</b> magsulat ng libreng paglalarawan at gagawa ang AI ng larawan.<br><b>Orihinal na larawan:</b> sinusuri ang URL, kinukuha ang og:image o gumagawa ng representatibong larawan.',
+    manual_s3_title:'✏️ Thumbnail editor', manual_s3_body:'I-tap ang <b>Magdagdag ng teksto at sticker</b>. 15 font, 5 estilo, kulay o gradient, ayusin ang laki, i-drag o i-pinch para sa scale.<br><br><b>Inirerekomendang daloy para sa Instagram/Facebook:</b> <b>🖼️ Mag-upload ng larawan</b> → piliin ang screenshot → putulin → "I-crop at gamitin" → "Magdagdag ng teksto" → ibahagi.',
+    manual_s4_title:'📚 Aklatan', manual_s4_body:'I-save ang mga thumbnail gamit ang pindutang <b>Aklatan</b>. Mag-assign ng mga kategorya at gamitin ang search bar.',
+    manual_s5_title:'⚙️ Mga Setting', manual_s5_body:'Visual na tema, pag-customize ng pindutan, mga kagustuhan, AI configuration, at pamamahala ng data.',
+    manual_s6_title:'📲 I-install bilang app', manual_s6_body:'Ang WAMS ay isang PWA. Sa Chrome/Edge, i-tap ang 📲 na pindutan sa header.',
+  },
+  ru: {
+    home_title:'Получить миниатюру', url_placeholder:'Вставьте URL YouTube или Facebook…',
+    btn_paste:'Вставить из буфера обмена', btn_ai_generate:'✨ Создать миниатюру с ИИ',
+    btn_prompt_ai:'🖊️ Создать по моему запросу', btn_original_ai:'🔍 Получить оригинальное изображение с ИИ',
+    result_title:'Результат', btn_wa_status:'Статус WhatsApp', btn_share:'Поделиться',
+    btn_download:'Скачать', btn_library:'Библиотека', btn_category:'Категория',
+    btn_editor:'✏️ Добавить текст и стикеры',
+    btn_screenshot:'📸 Захват экрана', btn_upload_img:'🖼️ Загрузить изображение / снимок экрана', nav_library:'БИБЛИОТЕКА', nav_settings:'НАСТРОЙКИ',
+    settings_lang:'🌐 Язык', settings_manual:'📖 Руководство',
+    manual_s1_title:'🏠 ГЛАВНАЯ — Получить миниатюры',
+    manual_s1_body:'Вставьте URL видео с YouTube, Facebook, Instagram, TikTok, Vimeo или Twitter/X и нажмите значок поиска. Используйте <b>Вставить из буфера обмена</b> для автоматической вставки.<br><br><b>💡 Совет для Instagram/Facebook:</b> кнопка <b>🖼️ Загрузить изображение</b> — наиболее рекомендуемый вариант для этих сетей. Сделайте снимок экрана, нажмите кнопку, выберите снимок из галереи, откроется редактор обрезки. Обрежьте границы, настройте пропорции, добавьте текст или стикеры и поделитесь.',
+    manual_s2_title:'✨ ИИ — Создать миниатюру',
+    manual_s2_body:'<b>Создать миниатюру с ИИ:</b> использует заголовок и описание видео. Требуется API Key Groq или Gemini.<br><b>Создать по запросу:</b> напишите описание, ИИ создаёт изображение.<br><b>Оригинальное изображение:</b> анализирует URL, извлекает og:image или создаёт иллюстрацию.',
+    manual_s3_title:'✏️ Редактор миниатюр',
+    manual_s3_body:'Нажмите <b>Добавить текст и стикеры</b>. 15 шрифтов, 5 стилей, цвет или градиент, перетаскивание или масштабирование щипком.<br><br><b>Рекомендуемый процесс для Instagram/Facebook:</b> <b>🖼️ Загрузить изображение</b> → выберите снимок → обрежьте → «Обрезать и использовать» → «Добавить текст и стикеры» → поделитесь.',
+    manual_s4_title:'📚 Библиотека', manual_s4_body:'Сохраняйте миниатюры кнопкой <b>Библиотека</b>. Назначайте категории. Используйте поиск для фильтрации.',
+    manual_s5_title:'⚙️ Настройки', manual_s5_body:'Визуальная тема, кнопки, предпочтения, конфигурация ИИ и управление данными.',
+    manual_s6_title:'📲 Установить как приложение', manual_s6_body:'WAMS — это PWA. В Chrome/Edge нажмите кнопку 📲 в заголовке или баннер установки.',
+  }
+};
+
+let currentLang = 'es';
+
+function setLanguage(lang, btn) {
+  if (!I18N[lang]) return;
+  currentLang = lang;
+  db.settings.lang = lang;
+  saveData();
+  // Update active button
+  document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  else { const b = document.querySelector(`[data-lang="${lang}"]`); if (b) b.classList.add('active'); }
+  applyI18n();
+}
+
+function applyI18n() {
+  const t = I18N[currentLang] || I18N.es;
+  // Text nodes
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.dataset.i18n;
+    if (t[key] !== undefined) el.innerHTML = t[key];
+  });
+  // Placeholders
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+    const key = el.dataset.i18nPlaceholder;
+    if (t[key] !== undefined) el.placeholder = t[key];
+  });
+}
+
+// ============================
+// FETCH ORIGINAL AI
+// ============================
+async function fetchOriginalAI() {
+  playSound('click');
+  const url = (document.getElementById('urlInput').value || '').trim();
+  if (!url) { showToast('Pega una URL primero'); return; }
+
+  const key = (db.settings.aiApiKey || '').trim();
+  const providerVal = db.settings.aiProvider || 'groq|llama-3.3-70b-versatile';
+  const [provider, model] = providerVal.split('|');
+  if (!key) {
+    showToast('⚠️ Configura tu API Key en Ajustes → IA');
+    showPanel('settings');
+    return;
+  }
+
+  const btn = document.getElementById('btnOriginalAI');
+  btn.disabled = true;
+  btn.innerHTML = '<span style="display:inline-block;animation:spin 1s linear infinite">⏳</span> Analizando…';
+
+  try {
+    // Step 1: try to extract og:image via CORS proxies
+    let ogImage = null;
+    const proxies = [
+      `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`,
+      `https://corsproxy.io/?${encodeURIComponent(url)}`
+    ];
+    for (const proxyUrl of proxies) {
+      try {
+        const res = await fetch(proxyUrl, { signal: AbortSignal.timeout(7000) });
+        const data = await res.json();
+        const html = data.contents || data.body || '';
+        // Extract og:image
+        const m = html.match(/property=["']og:image["']\s+content=["']([^"']+)["']/i)
+          || html.match(/content=["']([^"']+)["']\s+property=["']og:image["']/i)
+          || html.match(/"og:image"\s*:\s*"([^"]+)"/i)
+          || html.match(/"thumbnailUrl"\s*:\s*"([^"]+)"/i);
+        if (m && m[1] && m[1].startsWith('http')) { ogImage = m[1]; break; }
+      } catch(e) {}
+    }
+
+    if (ogImage) {
+      showToast('✅ Imagen og:image encontrada');
+      showThumbnail(ogImage, url);
+      return;
+    }
+
+    // Step 2: ask AI to extract title + description + generate prompt
+    showToast('⏳ Generando ilustración con IA…');
+
+    const aiSystemPrompt = 'You are a visual content analyst. Given a URL, provide: 1) A likely video/post title (guess from URL structure), 2) A brief description of the likely content, 3) A detailed visual image prompt in English for an AI image generator (max 120 words, describe only visual elements). Respond ONLY with valid JSON: {"title":"...","description":"...","imagePrompt":"..."}';
+    const aiUserMsg = `Analyse this URL and generate a social media thumbnail image prompt: ${url}`;
+
+    let parsed = null;
+    if (provider === 'groq') {
+      const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
+        body: JSON.stringify({ model, max_tokens: 350, temperature: 0.8,
+          messages: [{ role: 'system', content: aiSystemPrompt }, { role: 'user', content: aiUserMsg }]
+        })
+      });
+      if (!res.ok) throw new Error(`Groq ${res.status}`);
+      const d = await res.json();
+      const raw = d.choices?.[0]?.message?.content || '';
+      parsed = JSON.parse(raw.replace(/```json|```/g, '').trim());
+    } else if (provider === 'gemini') {
+      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          system_instruction: { parts: [{ text: aiSystemPrompt }] },
+          contents: [{ parts: [{ text: aiUserMsg }] }],
+          generationConfig: { maxOutputTokens: 350, temperature: 0.8, responseMimeType: 'application/json' }
+        })
+      });
+      if (!res.ok) throw new Error(`Gemini ${res.status}`);
+      const d = await res.json();
+      const raw = d.candidates?.[0]?.content?.parts?.[0]?.text || '';
+      parsed = JSON.parse(raw.replace(/```json|```/g, '').trim());
+    }
+
+    if (!parsed?.imagePrompt) throw new Error('Sin respuesta de la IA');
+
+    const suffix = ', NO text, NO letters, NO words, NO watermark, NO typography, purely visual illustration, social media thumbnail style, 16:9 aspect ratio, vibrant saturated colors, cinematic lighting, professional composition, sharp focus, high contrast, eye-catching';
+    const seed = Math.floor(Math.random() * 999999);
+    const imgUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(parsed.imagePrompt + suffix)}?width=1280&height=720&nologo=true&seed=${seed}&model=flux`;
+
+    showToast(`🎨 "${parsed.title || 'Imagen generada'}" · con IA`);
+    showThumbnail(imgUrl, url);
+
+  } catch(e) {
+    showToast('❌ Error: ' + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21-4.35-4.35"/><path d="M11 8v6M8 11h6"/></svg> <span data-i18n="btn_original_ai">🔍 Obtener imagen original con IA</span>`;
+    applyI18n();
+  }
+}
+
+// ============================
+// SCREENSHOT CAPTURE & CROP
+// ============================
+let cropState = {
+  imgW: 0, imgH: 0,       // natural canvas size
+  dispW: 0, dispH: 0,     // display size (CSS px)
+  scaleX: 1, scaleY: 1,
+  x: 0, y: 0, w: 0, h: 0, // crop rect in display coords
+  dragging: null,
+  dragStartX: 0, dragStartY: 0,
+  startRect: null
+};
+
+let screenshotOriginalBlob = null;
+
+// Open via "Capturar pantalla" button — tries clipboard image first, then file picker
+async function openScreenshotCapture() {
+  playSound('click');
+  // Try clipboard image (works on Chrome desktop/Android)
+  if (navigator.clipboard && navigator.clipboard.read) {
+    try {
+      const items = await navigator.clipboard.read();
+      for (const item of items) {
+        const imageType = item.types.find(t => t.startsWith('image/'));
+        if (imageType) {
+          const blob = await item.getType(imageType);
+          loadImageIntoScreenshotTool(blob);
+          return;
+        }
+      }
+    } catch(e) {}
+  }
+  // Fallback: file picker filtered to images (user can pick a screenshot from gallery)
+  document.getElementById('filePickerInput').click();
+}
+
+// Called when user picks a file OR when a shared image arrives
+function handleImageUpload(event) {
+  const file = event.target.files?.[0];
+  if (!file) return;
+  event.target.value = '';
+  loadImageIntoScreenshotTool(file);
+}
+
+function loadImageIntoScreenshotTool(blob) {
+  screenshotOriginalBlob = blob;
+  const url = URL.createObjectURL(blob);
+  const img = new Image();
+  img.onload = () => {
+    const canvas = document.getElementById('screenshotCanvas');
+    canvas.width = img.naturalWidth;
+    canvas.height = img.naturalHeight;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(img, 0, 0);
+    URL.revokeObjectURL(url);
+
+    // Compute display size (max 100% viewport width)
+    const maxW = Math.min(window.innerWidth - 16, 660);
+    const scale = Math.min(maxW / img.naturalWidth, 1);
+    const dw = Math.round(img.naturalWidth * scale);
+    const dh = Math.round(img.naturalHeight * scale);
+    canvas.style.width = dw + 'px';
+    canvas.style.height = dh + 'px';
+
+    cropState.imgW = img.naturalWidth;
+    cropState.imgH = img.naturalHeight;
+    cropState.dispW = dw;
+    cropState.dispH = dh;
+    cropState.scaleX = img.naturalWidth / dw;
+    cropState.scaleY = img.naturalHeight / dh;
+
+    // Full-image crop rect as starting position
+    cropState.x = 0; cropState.y = 0;
+    cropState.w = dw; cropState.h = dh;
+
+    updateCropOverlay();
+    setupCropHandles();
+    document.getElementById('screenshotModal').classList.add('open');
+
+    // Auto-detect and trim dark borders
+    autoTrimBorders();
+  };
+  img.src = url;
+}
+
+function updateCropOverlay() {
+  const { x, y, w, h, dispW, dispH } = cropState;
+  // Sync the SVG hole (shows through dark mask = the clear crop area)
+  const hole = document.getElementById('cropHole');
+  hole.setAttribute('x', x); hole.setAttribute('y', y);
+  hole.setAttribute('width', w); hole.setAttribute('height', h);
+  // Sync the border rect
+  const rect = document.getElementById('cropRect');
+  rect.setAttribute('x', x + 1); rect.setAttribute('y', y + 1);
+  rect.setAttribute('width', Math.max(0, w - 2)); rect.setAttribute('height', Math.max(0, h - 2));
+  // Move the 8 handles
+  const cx = x + w / 2, cy = y + h / 2;
+  const hPos = {
+    'ch-tl':[x,y], 'ch-tc':[cx,y], 'ch-tr':[x+w,y],
+    'ch-ml':[x,cy], 'ch-mr':[x+w,cy],
+    'ch-bl':[x,y+h], 'ch-bc':[cx,y+h], 'ch-br':[x+w,y+h]
+  };
+  for (const [id,[hx,hy]] of Object.entries(hPos)) {
+    const el = document.getElementById(id);
+    if (el) { el.style.left = hx + 'px'; el.style.top = hy + 'px'; }
+  }
+}
+
+function setupCropHandles() {
+  const handles = document.querySelectorAll('.crop-handle');
+  handles.forEach(h => {
+    // Mouse
+    h.addEventListener('mousedown', e => startHandleDrag(e, h.id, e.clientX, e.clientY));
+    // Touch
+    h.addEventListener('touchstart', e => {
+      e.preventDefault();
+      startHandleDrag(e, h.id, e.touches[0].clientX, e.touches[0].clientY);
+    }, { passive: false });
+  });
+  // Also allow dragging the entire crop rect to move it
+  const svg = document.getElementById('cropSVG');
+  svg.addEventListener('mousedown', e => {
+    if (e.target === svg || e.target.tagName === 'rect') startRectMove(e.clientX, e.clientY);
+  });
+  svg.addEventListener('touchstart', e => {
+    if (e.target === svg || e.target.tagName === 'rect') {
+      e.preventDefault();
+      startRectMove(e.touches[0].clientX, e.touches[0].clientY);
+    }
+  }, { passive: false });
+
+  document.addEventListener('mousemove', onCropMove);
+  document.addEventListener('mouseup', stopCropDrag);
+  document.addEventListener('touchmove', e => {
+    if (cropState.dragging) { e.preventDefault(); onCropMove({ clientX: e.touches[0].clientX, clientY: e.touches[0].clientY }); }
+  }, { passive: false });
+  document.addEventListener('touchend', stopCropDrag);
+}
+
+function startHandleDrag(e, handleId, cx, cy) {
+  cropState.dragging = handleId;
+  cropState.dragStartX = cx; cropState.dragStartY = cy;
+  cropState.startRect = { ...cropState };
+}
+
+function startRectMove(cx, cy) {
+  cropState.dragging = 'move';
+  cropState.dragStartX = cx; cropState.dragStartY = cy;
+  cropState.startRect = { ...cropState };
+}
+
+function onCropMove(e) {
+  if (!cropState.dragging) return;
+  const dx = e.clientX - cropState.dragStartX;
+  const dy = e.clientY - cropState.dragStartY;
+  const s = cropState.startRect;
+  const dw = cropState.dispW, dh = cropState.dispH;
+  const MIN = 30;
+
+  let { x, y, w, h } = s;
+
+  if (cropState.dragging === 'move') {
+    x = Math.max(0, Math.min(dw - w, s.x + dx));
+    y = Math.max(0, Math.min(dh - h, s.y + dy));
+  } else {
+    if (cropState.dragging.includes('l')) { const nx = Math.min(s.x + s.w - MIN, s.x + dx); w = s.w - (nx - s.x); x = nx; }
+    if (cropState.dragging.includes('r')) { w = Math.max(MIN, s.w + dx); }
+    if (cropState.dragging.includes('t')) { const ny = Math.min(s.y + s.h - MIN, s.y + dy); h = s.h - (ny - s.y); y = ny; }
+    if (cropState.dragging.includes('b')) { h = Math.max(MIN, s.h + dy); }
+    // Clamp
+    if (x < 0) { w += x; x = 0; }
+    if (y < 0) { h += y; y = 0; }
+    if (x + w > dw) w = dw - x;
+    if (y + h > dh) h = dh - y;
+  }
+
+  cropState.x = x; cropState.y = y;
+  cropState.w = Math.max(MIN, w); cropState.h = Math.max(MIN, h);
+  updateCropOverlay();
+}
+
+function stopCropDrag() { cropState.dragging = null; }
+
+// Auto-detect and trim dark/white uniform borders
+function autoTrimBorders() {
+  const canvas = document.getElementById('screenshotCanvas');
+  const ctx = canvas.getContext('2d');
+  const iw = canvas.width, ih = canvas.height;
+  const data = ctx.getImageData(0, 0, iw, ih).data;
+  const THRESH = 28; // color similarity threshold
+
+  function isBorderRow(row, from, to) {
+    const refIdx = (row * iw + Math.floor(iw / 2)) * 4;
+    const rR = data[refIdx], rG = data[refIdx+1], rB = data[refIdx+2];
+    for (let col = from; col < to; col++) {
+      const i = (row * iw + col) * 4;
+      if (Math.abs(data[i]-rR) + Math.abs(data[i+1]-rG) + Math.abs(data[i+2]-rB) > THRESH) return false;
+    }
+    return true;
+  }
+  function isBorderCol(col, from, to) {
+    const refIdx = (Math.floor(ih / 2) * iw + col) * 4;
+    const rR = data[refIdx], rG = data[refIdx+1], rB = data[refIdx+2];
+    for (let row = from; row < to; row++) {
+      const i = (row * iw + col) * 4;
+      if (Math.abs(data[i]-rR) + Math.abs(data[i+1]-rG) + Math.abs(data[i+2]-rB) > THRESH) return false;
+    }
+    return true;
+  }
+
+  let top = 0, bottom = ih - 1, left = 0, right = iw - 1;
+  while (top < bottom && isBorderRow(top, 0, iw)) top++;
+  while (bottom > top && isBorderRow(bottom, 0, iw)) bottom--;
+  while (left < right && isBorderCol(left, top, bottom)) left++;
+  while (right > left && isBorderCol(right, top, bottom)) right--;
+
+  // Add small padding
+  const PAD = 4;
+  top = Math.max(0, top - PAD); bottom = Math.min(ih - 1, bottom + PAD);
+  left = Math.max(0, left - PAD); right = Math.min(iw - 1, right + PAD);
+
+  // Convert to display coords
+  const sx = cropState.dispW / iw, sy = cropState.dispH / ih;
+  cropState.x = Math.round(left * sx);
+  cropState.y = Math.round(top * sy);
+  cropState.w = Math.round((right - left) * sx);
+  cropState.h = Math.round((bottom - top) * sy);
+  updateCropOverlay();
+  showToast('✂️ Bordes detectados y recortados');
+}
+
+function resetCrop() {
+  cropState.x = 0; cropState.y = 0;
+  cropState.w = cropState.dispW; cropState.h = cropState.dispH;
+  updateCropOverlay();
+}
+
+function setCropAspect(aw, ah) {
+  const { dispW, dispH } = cropState;
+  const maxW = dispW, maxH = dispH;
+  let w = maxW, h = Math.round(w * ah / aw);
+  if (h > maxH) { h = maxH; w = Math.round(h * aw / ah); }
+  cropState.x = Math.round((dispW - w) / 2);
+  cropState.y = Math.round((dispH - h) / 2);
+  cropState.w = w; cropState.h = h;
+  updateCropOverlay();
+}
+
+function cropAndUseScreenshot() {
+  const canvas = document.getElementById('screenshotCanvas');
+  const { x, y, w, h, scaleX, scaleY } = cropState;
+  // Convert display coords back to natural canvas coords
+  const nx = Math.round(x * scaleX), ny = Math.round(y * scaleY);
+  const nw = Math.round(w * scaleX), nh = Math.round(h * scaleY);
+
+  const out = document.createElement('canvas');
+  out.width = nw; out.height = nh;
+  const octx = out.getContext('2d');
+  octx.drawImage(canvas, nx, ny, nw, nh, 0, 0, nw, nh);
+
+  out.toBlob(blob => {
+    const url = URL.createObjectURL(blob);
+    currentThumbUrl = url;
+    currentVideoUrl = url;
+    // Show in result
+    showThumbnail(url, url);
+    // Save to library with tag
+    addToLibrary(true, 'Captura de pantalla');
+    document.getElementById('screenshotModal').classList.remove('open');
+    showToast('✅ Captura recortada y guardada en biblioteca');
+  }, 'image/jpeg', 0.95);
+}
+
+// ============================
+// SERVICE WORKER
+// ============================
+function initServiceWorker() {
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/VICO-WAMS/sw.js', { scope: '/VICO-WAMS/' })
+      .catch(e => console.log('SW error:', e));
+  }
+}
+
+// Settings apply
+function applySettings() {}
+
+// Start
+document.addEventListener('DOMContentLoaded', () => { init(); initEditorClickOutside(); });
+</script>
+</body>
+</html>
